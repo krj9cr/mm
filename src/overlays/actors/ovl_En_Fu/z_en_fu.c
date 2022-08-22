@@ -51,9 +51,9 @@ void func_80963FF8(EnFu* this, PlayState* play);
 void func_8096413C(EnFu* this, PlayState* play);
 void func_80964190(EnFu* this, PlayState* play);
 void func_8096426C(EnFu* this, PlayState* play);
-void func_80964694(EnFu* this, EnFuHeartEffect* ptr, Vec3f* arg2, s32 len);
-void func_809647EC(PlayState* play, EnFuHeartEffect* ptr, s32 len);
-void func_80964950(PlayState* play, EnFuHeartEffect* ptr, s32 len);
+void func_80964694(EnFu* this, EnFuHeartEffect* effect, Vec3f* arg2, s32 numEffects);
+void func_809647EC(PlayState* play, EnFuHeartEffect* effect, s32 numEffects);
+void func_80964950(PlayState* play, EnFuHeartEffect* effect, s32 numEffects);
 
 const ActorInit En_Fu_InitVars = {
     ACTOR_EN_FU,
@@ -1397,35 +1397,7 @@ void EnFu_Draw(Actor* thisx, PlayState* play) {
 }
 
 // EnFu_SpawnHeart
-void func_80964694(EnFu* this, EnFuHeartEffect* ptr, Vec3f* heartStartPos, s32 len) {
-    Vec3f heartVelocity = { 0.0f, 1.5f, 0.0f };
-    Vec3f zeroVec = { 0.0f, 0.0f, 0.0f };
-    s32 i = 0;
-
-    while ((i < len) && (ptr->isEnabled != 0)) {
-        i++;
-        ptr++;
-    }
-
-    if (i < len) {
-        ptr->isEnabled = true;
-        ptr->pos = *heartStartPos;
-        ptr->velocity = heartVelocity;
-        ptr->accel = zeroVec;
-        ptr->scale = 0.01f;
-
-        ptr->pos.x += 4.0f * Math_SinS(this->actor.shape.rot.y);
-        ptr->pos.z += 4.0f * Math_CosS(this->actor.shape.rot.y);
-        ptr->timer = 16;
-    }
-}
-
-/**
- * Spawns a heart at the first effects array index that's not enabled.
- * Because of the frame counts, only two hearts are ever spawned at a time.
- */
-/**
-void EnTg_SpawnHeart(EnTg* this, EnTgHeartEffect* effect, Vec3f* heartStartPos, s32 numEffects) {
+void func_80964694(EnFu* this, EnFuHeartEffect* effect, Vec3f* heartStartPos, s32 numEffects) {
     Vec3f heartVelocity = { 0.0f, 1.5f, 0.0f };
     Vec3f zeroVec = { 0.0f, 0.0f, 0.0f };
     s32 i;
@@ -1436,56 +1408,59 @@ void EnTg_SpawnHeart(EnTg* this, EnTgHeartEffect* effect, Vec3f* heartStartPos, 
         effect->isEnabled = true;
         effect->pos = *heartStartPos;
         effect->velocity = heartVelocity;
-        effect->unusedZeroVec = zeroVec;
+        effect->accel = zeroVec;
         effect->scale = 0.01f;
         effect->pos.x += 4.0f * Math_SinS(this->actor.shape.rot.y);
         effect->pos.z += 4.0f * Math_CosS(this->actor.shape.rot.y);
         effect->timer = 16;
     }
 }
-*/
 
-void func_809647EC(PlayState* play, EnFuHeartEffect* ptr, s32 len) {
+// EnFu_UpdateHearts
+void func_809647EC(PlayState* play, EnFuHeartEffect* effect, s32 numEffects) {
     Vec3f zeroVec = { 0.0f, 0.0f, 0.0f };
     s16 yaw = Camera_GetInputDirYaw(GET_ACTIVE_CAM(play));
     s32 i;
 
-    for (i = 0; i < len; i++, ptr++) {
-        if (ptr->isEnabled == true) {
-            if (DECR(ptr->timer) == 0) {
-                ptr->isEnabled = false;
+    for (i = 0; i < numEffects; i++, effect++) {
+        if (effect->isEnabled == true) {
+            if (DECR(effect->timer) == 0) {
+                effect->isEnabled = false;
             }
-            ptr->pos.y += ptr->velocity.y;
-            ptr->pos.x += 2.0f * Math_SinS(ptr->angle);
-            ptr->pos.z += 2.0f * Math_CosS(ptr->angle);
+            effect->pos.y += effect->velocity.y;
+            effect->pos.x += 2.0f * Math_SinS(effect->angle);
+            effect->pos.z += 2.0f * Math_CosS(effect->angle);
+
             Matrix_Push();
-            Matrix_Translate(ptr->pos.x, ptr->pos.y, ptr->pos.z, MTXMODE_NEW);
+            Matrix_Translate(effect->pos.x, effect->pos.y, effect->pos.z, MTXMODE_NEW);
             Matrix_RotateYS(yaw, MTXMODE_APPLY);
-            Matrix_MultVec3f(&zeroVec, &ptr->pos);
+            Matrix_MultVec3f(&zeroVec, &effect->pos);
             Matrix_Pop();
-            ptr->angle += 0x1770;
+
+            effect->angle += 0x1770;
         }
     }
 }
 
-void func_80964950(PlayState* play, EnFuHeartEffect* ptr, s32 len) {
+// EnFu_DrawHeart(s)
+void func_80964950(PlayState* play, EnFuHeartEffect* effect, s32 numEffects) {
     s32 i;
-    s32 flag = false;
+    s32 isMaterialApplied = false;
 
     OPEN_DISPS(play->state.gfxCtx);
 
     POLY_OPA_DISP = func_801660B8(play, POLY_OPA_DISP);
     POLY_OPA_DISP = func_8012C724(POLY_OPA_DISP);
 
-    for (i = 0; i < len; i++, ptr++) {
-        if (ptr->isEnabled == true) {
-            if (!flag) {
+    for (i = 0; i < numEffects; i++, effect++) {
+        if (effect->isEnabled == true) {
+            if (!isMaterialApplied) {
                 gSPDisplayList(POLY_OPA_DISP++, gHoneyAndDarlingHeartMaterialDL);
-                flag = true;
+                isMaterialApplied = true;
             }
-            Matrix_Translate(ptr->pos.x, ptr->pos.y, ptr->pos.z, MTXMODE_NEW);
+            Matrix_Translate(effect->pos.x, effect->pos.y, effect->pos.z, MTXMODE_NEW);
             Matrix_ReplaceRotation(&play->billboardMtxF);
-            Matrix_Scale(ptr->scale, ptr->scale, ptr->scale, MTXMODE_APPLY);
+            Matrix_Scale(effect->scale, effect->scale, effect->scale, MTXMODE_APPLY);
 
             gSPSegment(POLY_OPA_DISP++, 0x08, Lib_SegmentedToVirtual(gDropRecoveryHeartTex));
             gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
