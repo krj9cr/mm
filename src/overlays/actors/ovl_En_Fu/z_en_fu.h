@@ -47,7 +47,7 @@ typedef struct EnFu {
     /* 0x548 */ s16 unk_548;
     /* 0x54A */ s16 unk_54A;
     /* 0x54C */ s16 unk_54C;
-    /* 0x54E */ s16 unk_54E;
+    /* 0x54E */ s16 spawnHeartTimer;
     /* 0x550 */ s16 unk_550;
     /* 0x552 */ u16 unk_552;
 } EnFu; // size = 0x554

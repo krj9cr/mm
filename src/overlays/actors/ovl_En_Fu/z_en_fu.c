@@ -210,7 +210,7 @@ void EnFu_Init(Actor* thisx, PlayState* play) {
         this->unk_53C = 0;
         this->unk_53E = 0;
         this->unk_540 = 0;
-        this->unk_54E = 0;
+        this->spawnHeartTimer = 0;
         this->unk_550 = 0;
         func_809622FC(this);
         this->actor.targetMode = 6;
@@ -1182,14 +1182,15 @@ void func_80963FF8(EnFu* this, PlayState* play) {
     }
 }
 
+// EnFu_SpawnHeart
 void func_80964034(EnFu* this, PlayState* play) {
-    Vec3f sp2C;
+    Vec3f heartStartPos;
 
-    if (DECR(this->unk_54E) == 0) {
-        this->unk_54E = 12;
-        sp2C = this->actor.world.pos;
-        sp2C.y += 62.0f;
-        func_80964694(this, this->effects, &sp2C, ARRAY_COUNT(this->effects));
+    if (DECR(this->spawnHeartTimer) == 0) {
+        this->spawnHeartTimer = 12;
+        heartStartPos = this->actor.world.pos;
+        heartStartPos.y += 62.0f;
+        func_80964694(this, this->effects, &heartStartPos, ARRAY_COUNT(this->effects));
     }
     func_809647EC(play, this->effects, ARRAY_COUNT(this->effects));
 }
@@ -1347,7 +1348,7 @@ void EnFu_Update(Actor* thisx, PlayState* play) {
 s32 EnFu_OverrideLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3f* pos, Vec3s* rot, Actor* thisx) {
     EnFu* this = THIS;
 
-    if (limbIndex == 9) {
+    if (limbIndex == 9) { // TODO: replace with limb name
         Matrix_Translate(1600.0f, 300.0f, 0.0f, MTXMODE_APPLY);
         Matrix_RotateXS(this->unk_524[1], MTXMODE_APPLY);
         Matrix_RotateZS(this->unk_524[0], MTXMODE_APPLY);
@@ -1368,7 +1369,7 @@ void EnFu_PostLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3s* rot, 
     static Vec3f D_80964C34 = { -3500.0f, 0.0f, 0.0f };
     EnFu* this = THIS;
 
-    if (limbIndex == 9) {
+    if (limbIndex == 9) { // TODO: replace with limb name
         Matrix_MultVec3f(&D_80964C28, &this->unk_508);
     } else if (limbIndex == 20) {
         Matrix_MultVec3f(&D_80964C34, &this->unk_514);
