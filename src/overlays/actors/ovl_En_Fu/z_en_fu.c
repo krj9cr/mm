@@ -51,9 +51,9 @@ void func_80963FF8(EnFu* this, PlayState* play);
 void func_8096413C(EnFu* this, PlayState* play);
 void func_80964190(EnFu* this, PlayState* play);
 void func_8096426C(EnFu* this, PlayState* play);
-void func_80964694(EnFu* this, EnFuUnkStruct* ptr, Vec3f* arg2, s32 len);
-void func_809647EC(PlayState* play, EnFuUnkStruct* ptr, s32 len);
-void func_80964950(PlayState* play, EnFuUnkStruct* ptr, s32 len);
+void func_80964694(EnFu* this, EnFuHeartEffect* ptr, Vec3f* arg2, s32 len);
+void func_809647EC(PlayState* play, EnFuHeartEffect* ptr, s32 len);
+void func_80964950(PlayState* play, EnFuHeartEffect* ptr, s32 len);
 
 const ActorInit En_Fu_InitVars = {
     ACTOR_EN_FU,
@@ -1189,9 +1189,9 @@ void func_80964034(EnFu* this, PlayState* play) {
         this->unk_54E = 12;
         sp2C = this->actor.world.pos;
         sp2C.y += 62.0f;
-        func_80964694(this, this->unk_2D8, &sp2C, ARRAY_COUNT(this->unk_2D8));
+        func_80964694(this, this->effects, &sp2C, ARRAY_COUNT(this->effects));
     }
-    func_809647EC(play, this->unk_2D8, ARRAY_COUNT(this->unk_2D8));
+    func_809647EC(play, this->effects, ARRAY_COUNT(this->effects));
 }
 
 void func_809640D8(EnFu* this, PlayState* play) {
@@ -1380,7 +1380,7 @@ void EnFu_Draw(Actor* thisx, PlayState* play) {
     EnFu* this = THIS;
 
     Matrix_Push();
-    func_80964950(play, this->unk_2D8, ARRAY_COUNT(this->unk_2D8));
+    func_80964950(play, this->effects, ARRAY_COUNT(this->effects));
     Matrix_Pop();
 
     OPEN_DISPS(play->state.gfxCtx);
@@ -1396,9 +1396,10 @@ void EnFu_Draw(Actor* thisx, PlayState* play) {
     CLOSE_DISPS(play->state.gfxCtx);
 }
 
-void func_80964694(EnFu* this, EnFuUnkStruct* ptr, Vec3f* arg2, s32 len) {
-    Vec3f sp2C = { 0.0f, 1.5f, 0.0f };
-    Vec3f sp20 = { 0.0f, 0.0f, 0.0f };
+// EnFu_SpawnHeart
+void func_80964694(EnFu* this, EnFuHeartEffect* ptr, Vec3f* heartStartPos, s32 len) {
+    Vec3f heartVelocity = { 0.0f, 1.5f, 0.0f };
+    Vec3f zeroVec = { 0.0f, 0.0f, 0.0f };
     s32 i = 0;
 
     while ((i < len) && (ptr->unk_36 != 0)) {
@@ -1407,10 +1408,10 @@ void func_80964694(EnFu* this, EnFuUnkStruct* ptr, Vec3f* arg2, s32 len) {
     }
 
     if (i < len) {
-        ptr->unk_36 = 1;
-        ptr->unk_08 = *arg2;
-        ptr->unk_20 = sp2C;
-        ptr->unk_14 = sp20;
+        ptr->unk_36 = true;
+        ptr->unk_08 = *heartStartPos;
+        ptr->unk_20 = heartVelocity;
+        ptr->unk_14 = zeroVec;
         ptr->unk_00 = 0.01f;
 
         ptr->unk_08.x += 4.0f * Math_SinS(this->actor.shape.rot.y);
@@ -1419,7 +1420,32 @@ void func_80964694(EnFu* this, EnFuUnkStruct* ptr, Vec3f* arg2, s32 len) {
     }
 }
 
-void func_809647EC(PlayState* play, EnFuUnkStruct* ptr, s32 len) {
+/**
+ * Spawns a heart at the first effects array index that's not enabled.
+ * Because of the frame counts, only two hearts are ever spawned at a time.
+ */
+/**
+void EnTg_SpawnHeart(EnTg* this, EnTgHeartEffect* effect, Vec3f* heartStartPos, s32 numEffects) {
+    Vec3f heartVelocity = { 0.0f, 1.5f, 0.0f };
+    Vec3f zeroVec = { 0.0f, 0.0f, 0.0f };
+    s32 i;
+
+    for (i = 0; i < numEffects && effect->isEnabled; i++, effect++) {}
+
+    if (i < numEffects) {
+        effect->isEnabled = true;
+        effect->pos = *heartStartPos;
+        effect->velocity = heartVelocity;
+        effect->unusedZeroVec = zeroVec;
+        effect->scale = 0.01f;
+        effect->pos.x += 4.0f * Math_SinS(this->actor.shape.rot.y);
+        effect->pos.z += 4.0f * Math_CosS(this->actor.shape.rot.y);
+        effect->timer = 16;
+    }
+}
+*/
+
+void func_809647EC(PlayState* play, EnFuHeartEffect* ptr, s32 len) {
     Vec3f sp44 = { 0.0f, 0.0f, 0.0f };
     s16 yaw = Camera_GetInputDirYaw(GET_ACTIVE_CAM(play));
     s32 i;
@@ -1442,7 +1468,7 @@ void func_809647EC(PlayState* play, EnFuUnkStruct* ptr, s32 len) {
     }
 }
 
-void func_80964950(PlayState* play, EnFuUnkStruct* ptr, s32 len) {
+void func_80964950(PlayState* play, EnFuHeartEffect* ptr, s32 len) {
     s32 i;
     s32 flag = false;
 

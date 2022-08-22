@@ -11,16 +11,16 @@ typedef void (*EnFuActionFunc)(struct EnFu*, PlayState*);
 #define ENFU_GET_FF00(thisx) (((thisx)->params >> 8) & 0xFF)
 
 typedef struct {
-    /* 0x00 */ f32 unk_00;
+    /* 0x00 */ f32 unk_00; // scale
     /* 0x04 */ UNK_TYPE1 unk_04[0x4];
-    /* 0x08 */ Vec3f unk_08;
-    /* 0x14 */ Vec3f unk_14;
-    /* 0x20 */ Vec3f unk_20;
-    /* 0x2C */ s16 unk_2C;
+    /* 0x08 */ Vec3f unk_08; // pos
+    /* 0x14 */ Vec3f unk_14; // acceleration?
+    /* 0x20 */ Vec3f unk_20; // velocity
+    /* 0x2C */ s16 unk_2C; // angle
     /* 0x2E */ UNK_TYPE1 unk_2E[0x8];
-    /* 0x36 */ u8 unk_36;
-    /* 0x37 */ u8 unk_37;
-} EnFuUnkStruct; // size = 0x38
+    /* 0x36 */ u8 unk_36; // isEnabled
+    /* 0x37 */ u8 unk_37; // timer
+} EnFuHeartEffect; // size = 0x38
 
 typedef struct EnFu {
     /* 0x000 */ Actor actor;
@@ -30,7 +30,7 @@ typedef struct EnFu {
     /* 0x1D8 */ Vec3s jointTable[21];
     /* 0x256 */ Vec3s morphTable[21];
     /* 0x2D4 */ BgFuMizu* unk_2D4;
-    /* 0x2D8 */ EnFuUnkStruct unk_2D8[10];
+    /* 0x2D8 */ EnFuHeartEffect effects[10];
     /* 0x508 */ Vec3f unk_508;
     /* 0x514 */ Vec3f unk_514;
     /* 0x520 */ s32 unk_520;
