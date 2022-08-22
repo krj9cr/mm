@@ -1402,21 +1402,21 @@ void func_80964694(EnFu* this, EnFuHeartEffect* ptr, Vec3f* heartStartPos, s32 l
     Vec3f zeroVec = { 0.0f, 0.0f, 0.0f };
     s32 i = 0;
 
-    while ((i < len) && (ptr->unk_36 != 0)) {
+    while ((i < len) && (ptr->isEnabled != 0)) {
         i++;
         ptr++;
     }
 
     if (i < len) {
-        ptr->unk_36 = true;
-        ptr->unk_08 = *heartStartPos;
-        ptr->unk_20 = heartVelocity;
-        ptr->unk_14 = zeroVec;
-        ptr->unk_00 = 0.01f;
+        ptr->isEnabled = true;
+        ptr->pos = *heartStartPos;
+        ptr->velocity = heartVelocity;
+        ptr->accel = zeroVec;
+        ptr->scale = 0.01f;
 
-        ptr->unk_08.x += 4.0f * Math_SinS(this->actor.shape.rot.y);
-        ptr->unk_08.z += 4.0f * Math_CosS(this->actor.shape.rot.y);
-        ptr->unk_37 = 16;
+        ptr->pos.x += 4.0f * Math_SinS(this->actor.shape.rot.y);
+        ptr->pos.z += 4.0f * Math_CosS(this->actor.shape.rot.y);
+        ptr->timer = 16;
     }
 }
 
@@ -1446,24 +1446,24 @@ void EnTg_SpawnHeart(EnTg* this, EnTgHeartEffect* effect, Vec3f* heartStartPos, 
 */
 
 void func_809647EC(PlayState* play, EnFuHeartEffect* ptr, s32 len) {
-    Vec3f sp44 = { 0.0f, 0.0f, 0.0f };
+    Vec3f zeroVec = { 0.0f, 0.0f, 0.0f };
     s16 yaw = Camera_GetInputDirYaw(GET_ACTIVE_CAM(play));
     s32 i;
 
     for (i = 0; i < len; i++, ptr++) {
-        if (ptr->unk_36 == 1) {
-            if (DECR(ptr->unk_37) == 0) {
-                ptr->unk_36 = false;
+        if (ptr->isEnabled == true) {
+            if (DECR(ptr->timer) == 0) {
+                ptr->isEnabled = false;
             }
-            ptr->unk_08.y += ptr->unk_20.y;
-            ptr->unk_08.x += 2.0f * Math_SinS(ptr->unk_2C);
-            ptr->unk_08.z += 2.0f * Math_CosS(ptr->unk_2C);
+            ptr->pos.y += ptr->velocity.y;
+            ptr->pos.x += 2.0f * Math_SinS(ptr->angle);
+            ptr->pos.z += 2.0f * Math_CosS(ptr->angle);
             Matrix_Push();
-            Matrix_Translate(ptr->unk_08.x, ptr->unk_08.y, ptr->unk_08.z, MTXMODE_NEW);
+            Matrix_Translate(ptr->pos.x, ptr->pos.y, ptr->pos.z, MTXMODE_NEW);
             Matrix_RotateYS(yaw, MTXMODE_APPLY);
-            Matrix_MultVec3f(&sp44, &ptr->unk_08);
+            Matrix_MultVec3f(&zeroVec, &ptr->pos);
             Matrix_Pop();
-            ptr->unk_2C += 6000;
+            ptr->angle += 0x1770;
         }
     }
 }
@@ -1478,14 +1478,14 @@ void func_80964950(PlayState* play, EnFuHeartEffect* ptr, s32 len) {
     POLY_OPA_DISP = func_8012C724(POLY_OPA_DISP);
 
     for (i = 0; i < len; i++, ptr++) {
-        if (ptr->unk_36 == 1) {
+        if (ptr->isEnabled == true) {
             if (!flag) {
                 gSPDisplayList(POLY_OPA_DISP++, gHoneyAndDarlingHeartMaterialDL);
                 flag = true;
             }
-            Matrix_Translate(ptr->unk_08.x, ptr->unk_08.y, ptr->unk_08.z, MTXMODE_NEW);
+            Matrix_Translate(ptr->pos.x, ptr->pos.y, ptr->pos.z, MTXMODE_NEW);
             Matrix_ReplaceRotation(&play->billboardMtxF);
-            Matrix_Scale(ptr->unk_00, ptr->unk_00, ptr->unk_00, MTXMODE_APPLY);
+            Matrix_Scale(ptr->scale, ptr->scale, ptr->scale, MTXMODE_APPLY);
 
             gSPSegment(POLY_OPA_DISP++, 0x08, Lib_SegmentedToVirtual(gDropRecoveryHeartTex));
             gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
