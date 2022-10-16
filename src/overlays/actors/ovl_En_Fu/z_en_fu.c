@@ -1186,7 +1186,7 @@ void func_80963FF8(EnFu* this, PlayState* play) {
     }
 }
 
-// EnFu_SpawnHeart
+// Similar to EnTg_Idle
 void func_80964034(EnFu* this, PlayState* play) {
     Vec3f heartStartPos;
 
@@ -1405,7 +1405,9 @@ void EnFu_Draw(Actor* thisx, PlayState* play) {
 void func_80964694(EnFu* this, EnFuHeartEffect* effect, Vec3f* heartStartPos, s32 numEffects) {
     Vec3f heartVelocity = { 0.0f, 1.5f, 0.0f };
     Vec3f zeroVec = { 0.0f, 0.0f, 0.0f };
-    s32 i = 0;
+    s32 i;
+
+    for (i = 0; i < numEffects && effect->isEnabled; i++, effect++) {}
 
     if (i < numEffects) {
         effect->isEnabled = true;
