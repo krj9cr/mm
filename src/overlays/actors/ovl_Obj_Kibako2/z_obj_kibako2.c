@@ -221,14 +221,14 @@ void ObjKibako2_Idle(ObjKibako2* this, PlayState* play) {
 
 void ObjKibako2_Kill(ObjKibako2* this, PlayState* play) {
     ObjKibako2_SpawnContents(this, play);
-    Actor_MarkForDeath(&this->dyna.actor);
+    Actor_Kill(&this->dyna.actor);
 }
 
 void ObjKibako2_Update(Actor* thisx, PlayState* play) {
     ObjKibako2* this = THIS;
 
     if (this->unk_1AC != 0) {
-        play->actorCtx.unk5 |= 8;
+        play->actorCtx.flags |= ACTORCTX_FLAG_3;
     }
 
     if (this->skulltulaNoiseTimer >= 0) {

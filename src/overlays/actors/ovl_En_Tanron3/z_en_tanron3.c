@@ -142,7 +142,8 @@ void EnTanron3_SpawnBubbles(EnTanron3* this, PlayState* play) {
         acceleration.y = velocity.y * -0.05f;
         acceleration.z = velocity.z * -0.05f;
         EffectSsDtBubble_SpawnCustomColor(play, &this->actor.world.pos, &velocity, &acceleration, &sPrimColor,
-                                          &sEnvColor, Rand_ZeroFloat(30.0f) + 70.0f, Rand_ZeroFloat(5.0f) + 15.0f, 0);
+                                          &sEnvColor, Rand_ZeroFloat(30.0f) + 70.0f, Rand_ZeroFloat(5.0f) + 15.0f,
+                                          false);
     }
 }
 
@@ -210,7 +211,7 @@ void EnTanron3_Live(EnTanron3* this, PlayState* play) {
 
                 // If the player gets eaten by Gyorg, or if the attack timer ran out,
                 // stop chasing the player for a little bit.
-                if (this->workTimer[WORK_TIMER_ATTACK] == 0 || (player->stateFlags2 & 0x80)) {
+                if (this->workTimer[WORK_TIMER_ATTACK] == 0 || (player->stateFlags2 & PLAYER_STATE2_80)) {
                     this->workTimer[WORK_TIMER_WAIT] = 150;
                     this->isNonHostile = true;
                 }
@@ -353,7 +354,7 @@ void EnTanron3_Die(EnTanron3* this, PlayState* play) {
     Actor_MoveWithoutGravityReverse(&this->actor);
     if (this->workTimer[WORK_TIMER_DIE] == 0) {
         EnTanron3_SpawnBubbles(this, play);
-        Actor_MarkForDeath(&this->actor);
+        Actor_Kill(&this->actor);
         if (Rand_ZeroOne() < 0.3f) {
             Item_DropCollectibleRandom(play, NULL, &this->actor.world.pos, 0x60);
         }

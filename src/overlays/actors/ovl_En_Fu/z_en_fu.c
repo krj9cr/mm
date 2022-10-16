@@ -274,7 +274,7 @@ void func_80961E88(PlayState* play) {
     Actor* explosive = play->actorCtx.actorLists[ACTORCAT_EXPLOSIVES].first;
 
     while (explosive != NULL) {
-        Actor_MarkForDeath(explosive);
+        Actor_Kill(explosive);
         explosive = explosive->next;
     }
 }
@@ -401,7 +401,8 @@ void func_80962340(EnFu* this, PlayState* play) {
                     Message_StartTextbox(play, 0x287E, &this->actor);
                     this->unk_552 = 0x287E;
                 }
-            } else if ((gSaveContext.unk_3DE0[4] == 0) && (this->unk_552 != 0x2888)) {
+            } else if ((gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] == SECONDS_TO_TIMER(0)) &&
+                       (this->unk_552 != 0x2888)) {
                 Message_StartTextbox(play, 0x2886, &this->actor);
                 this->unk_552 = 0x2886;
             } else {
@@ -409,7 +410,7 @@ void func_80962340(EnFu* this, PlayState* play) {
                 this->unk_552 = 0x2889;
             }
             this->actor.flags &= ~ACTOR_FLAG_10000;
-            player->stateFlags1 &= ~0x20;
+            player->stateFlags1 &= ~PLAYER_STATE1_20;
             this->unk_54A = 1;
         } else {
             Message_StartTextbox(play, 0x283C, &this->actor);
@@ -534,10 +535,10 @@ void func_80962660(EnFu* this, PlayState* play) {
                 gSaveContext.save.weekEventReg[63] |= 1;
                 gSaveContext.save.weekEventReg[63] &= (u8)~2;
                 func_801477B4(play);
-                player->stateFlags1 |= 0x20;
+                player->stateFlags1 |= PLAYER_STATE1_20;
                 this->unk_53C = 0;
                 Actor_ChangeAnimationByInfo(&this->skelAnime, sAnimationInfo, 3);
-                func_801A2BB8(NA_BGM_MINI_GAME_2);
+                func_801A2BB8(NA_BGM_TIMED_MINI_GAME);
                 if (this->unk_542 == 0) {
                     if (this->unk_546 == 1) {
                         func_80961EC8(play);
@@ -643,17 +644,16 @@ void func_80962A10(EnFu* this, PlayState* play) {
     }
 
     play_sound(NA_SE_SY_FOUND);
-    player->stateFlags1 &= ~0x20;
-    func_8010E9F0(4, 60);
+    player->stateFlags1 &= ~PLAYER_STATE1_20;
+    Interface_StartTimer(TIMER_ID_MINIGAME_2, 60);
     if (this->unk_546 == 1) {
         func_809616E0(this, play);
     } else {
         this->unk_546 = 1;
     }
 
-    if ((gSaveContext.save.playerForm == PLAYER_FORM_DEKU) && gSaveContext.save.playerData.magicAcquired) {
-        Parameter_AddMagic(play,
-                           ((void)0, gSaveContext.unk_3F30) + (gSaveContext.save.playerData.doubleMagic * 48) + 48);
+    if ((gSaveContext.save.playerForm == PLAYER_FORM_DEKU) && gSaveContext.save.playerData.isMagicAcquired) {
+        Magic_Add(play, MAGIC_FILL_TO_CAPACITY);
     }
 
     func_80962F10(this);
@@ -680,9 +680,9 @@ void func_80962BCC(EnFu* this, PlayState* play) {
     }
 
     play_sound(NA_SE_SY_FOUND);
-    player->stateFlags1 &= ~0x20;
-    player->stateFlags3 |= 0x400000;
-    func_8010E9F0(4, 60);
+    player->stateFlags1 &= ~PLAYER_STATE1_20;
+    player->stateFlags3 |= PLAYER_STATE3_400000;
+    Interface_StartTimer(TIMER_ID_MINIGAME_2, 60);
 
     if (this->unk_546 == 1) {
         func_809616E0(this, play);
@@ -711,9 +711,9 @@ void func_80962D60(EnFu* this, PlayState* play) {
     }
 
     play_sound(NA_SE_SY_FOUND);
-    player->stateFlags1 &= ~0x20;
-    player->stateFlags3 |= 0x400000;
-    func_8010E9F0(4, 60);
+    player->stateFlags1 &= ~PLAYER_STATE1_20;
+    player->stateFlags3 |= PLAYER_STATE3_400000;
+    Interface_StartTimer(TIMER_ID_MINIGAME_2, 60);
 
     if (this->unk_546 == 1) {
         func_809616E0(this, play);
@@ -748,7 +748,7 @@ void func_80962F4C(EnFu* this, PlayState* play) {
     switch (this->unk_542) {
         case 0:
             if (gSaveContext.save.playerForm == PLAYER_FORM_HUMAN) {
-                player->stateFlags3 |= 0x400;
+                player->stateFlags3 |= PLAYER_STATE3_400;
             }
             break;
 
@@ -761,11 +761,11 @@ void func_80962F4C(EnFu* this, PlayState* play) {
             break;
     }
 
-    if (gSaveContext.unk_3DE0[4] < 2000) {
+    if (gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] < SECONDS_TO_TIMER(20)) {
         s16 val = D_80964B00[this->unk_542] + 200;
 
         Math_SmoothStepToS(&fuKaiten->rotationSpeed, val, 10, 5, 5);
-    } else if (gSaveContext.unk_3DE0[4] < 4000) {
+    } else if (gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] < SECONDS_TO_TIMER(40)) {
         s16 val = D_80964B00[this->unk_542] + 100;
 
         Math_SmoothStepToS(&fuKaiten->rotationSpeed, val, 10, 5, 5);
@@ -777,12 +777,12 @@ void func_80962F4C(EnFu* this, PlayState* play) {
 
     if ((!DynaPolyActor_IsInRidingRotatingState((DynaPolyActor*)this->actor.child) &&
          (player->actor.bgCheckFlags & 1)) ||
-        (gSaveContext.unk_3DE0[4] < 1) || (this->unk_548 == this->unk_54C)) {
-        player->stateFlags3 &= ~0x400000;
+        (gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] <= SECONDS_TO_TIMER(0)) || (this->unk_548 == this->unk_54C)) {
+        player->stateFlags3 &= ~PLAYER_STATE3_400000;
         func_80961E88(play);
-        player->stateFlags1 |= 0x20;
+        player->stateFlags1 |= PLAYER_STATE1_20;
         if (this->unk_548 < this->unk_54C) {
-            if (gSaveContext.unk_3DE0[4] == 0) {
+            if (gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] == SECONDS_TO_TIMER(0)) {
                 Message_StartTextbox(play, 0x2885, &this->actor);
                 this->unk_552 = 0x2885;
             } else {
@@ -790,16 +790,16 @@ void func_80962F4C(EnFu* this, PlayState* play) {
                 this->unk_552 = 0x2888;
             }
             func_801A2C20();
-            gSaveContext.unk_3DE0[4] = 0;
-            gSaveContext.unk_3DD0[4] = 5;
+            gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] = SECONDS_TO_TIMER(0);
+            gSaveContext.timerStates[TIMER_ID_MINIGAME_2] = TIMER_STATE_STOP;
             this->unk_548 = 0;
             func_809632D0(this);
         } else {
             this->unk_548 = 0;
             func_801A2C20();
-            gSaveContext.unk_3DE0[4] = 0;
-            gSaveContext.unk_3DD0[4] = 5;
-            func_801A3098(NA_BGM_GET_ITEM | 0x900);
+            gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] = SECONDS_TO_TIMER(0);
+            gSaveContext.timerStates[TIMER_ID_MINIGAME_2] = TIMER_STATE_STOP;
+            Audio_PlayFanfare(NA_BGM_GET_ITEM | 0x900);
             func_8011B4E0(play, 1);
             this->unk_54A = 3;
             func_809632D0(this);
@@ -821,7 +821,7 @@ void func_8096326C(EnFu* this, PlayState* play) {
 
 void func_809632D0(EnFu* this) {
     if (gSaveContext.save.playerForm == PLAYER_FORM_DEKU) {
-        Interface_ChangeAlpha(50);
+        Interface_SetHudVisibility(HUD_VISIBILITY_ALL);
     }
 
     gSaveContext.save.weekEventReg[8] &= (u8)~1;
@@ -932,7 +932,7 @@ void func_80963630(EnFu* this, PlayState* play) {
                     break;
             }
         }
-        player->stateFlags1 &= ~0x20;
+        player->stateFlags1 &= ~PLAYER_STATE1_20;
     } else {
         this->actor.child->freezeTimer = 10;
         func_800B85E0(&this->actor, play, 500.0f, PLAYER_AP_MINUS1);
@@ -1139,7 +1139,7 @@ void func_80963DE4(EnFu* this, PlayState* play) {
 }
 
 void func_80963EAC(EnFu* this, PlayState* play) {
-    if (gSaveContext.save.playerData.magicAcquired) {
+    if (gSaveContext.save.playerData.isMagicAcquired) {
         if (this->unk_540 == 1) {
             Message_StartTextbox(play, 0x2847, &this->actor);
             this->unk_552 = 0x2847;
@@ -1174,7 +1174,7 @@ void func_80963F88(EnFu* this, PlayState* play) {
 void func_80963FF8(EnFu* this, PlayState* play) {
     Player* player = GET_PLAYER(play);
 
-    if (player->stateFlags1 & 0x100000) {
+    if (player->stateFlags1 & PLAYER_STATE1_100000) {
         play->actorCtx.unk268 = 1;
         play->actorCtx.unk_26C.press.button = 0x8000;
     } else {
@@ -1403,17 +1403,16 @@ void func_80964694(EnFu* this, EnFuHeartEffect* effect, Vec3f* heartStartPos, s3
     Vec3f zeroVec = { 0.0f, 0.0f, 0.0f };
     s32 i;
 
-    for (i = 0; i < numEffects && effect->isEnabled; i++, effect++) {}
+    if (i < len) {
+        ptr->unk_36 = 1;
+        ptr->unk_08 = *arg2;
+        ptr->unk_20 = sp2C;
+        ptr->unk_14 = sp20;
+        ptr->unk_00 = 0.01f;
 
-    if (i < numEffects) {
-        effect->isEnabled = true;
-        effect->pos = *heartStartPos;
-        effect->velocity = heartVelocity;
-        effect->accel = zeroVec;
-        effect->scale = 0.01f;
-        effect->pos.x += 4.0f * Math_SinS(this->actor.shape.rot.y);
-        effect->pos.z += 4.0f * Math_CosS(this->actor.shape.rot.y);
-        effect->timer = 16;
+        ptr->unk_08.x += 4.0f * Math_SinS(this->actor.shape.rot.y);
+        ptr->unk_08.z += 4.0f * Math_CosS(this->actor.shape.rot.y);
+        ptr->unk_37 = 16;
     }
 }
 
@@ -1453,11 +1452,11 @@ void func_80964950(PlayState* play, EnFuHeartEffect* effect, s32 numEffects) {
     POLY_OPA_DISP = func_801660B8(play, POLY_OPA_DISP);
     POLY_OPA_DISP = func_8012C724(POLY_OPA_DISP);
 
-    for (i = 0; i < numEffects; i++, effect++) {
-        if (effect->isEnabled == true) {
-            if (!isMaterialApplied) {
-                gSPDisplayList(POLY_OPA_DISP++, gHoneyAndDarlingHeartMaterialDL);
-                isMaterialApplied = true;
+    for (i = 0; i < len; i++, ptr++) {
+        if (ptr->unk_36 == 1) {
+            if (!flag) {
+                gSPDisplayList(POLY_OPA_DISP++, object_mu_DL_00B0A0);
+                flag = true;
             }
             Matrix_Translate(effect->pos.x, effect->pos.y, effect->pos.z, MTXMODE_NEW);
             Matrix_ReplaceRotation(&play->billboardMtxF);

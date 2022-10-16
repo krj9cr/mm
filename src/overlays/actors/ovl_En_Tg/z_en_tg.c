@@ -5,7 +5,6 @@
  */
 
 #include "z_en_tg.h"
-#include "objects/object_mu/object_mu.h"
 #include "objects/gameplay_keep/gameplay_keep.h"
 
 #define FLAGS (ACTOR_FLAG_1 | ACTOR_FLAG_8)
@@ -19,7 +18,7 @@ void EnTg_Draw(Actor* thisx, PlayState* play);
 
 void EnTg_Idle(EnTg* this, PlayState* play);
 void EnTg_UpdateHearts(PlayState* play, EnTgHeartEffect* effect, s32 numEffects);
-void EnTg_DrawHeart(PlayState* play, EnTgHeartEffect* effect, s32 numEffects);
+void EnTg_DrawHearts(PlayState* play, EnTgHeartEffect* effect, s32 numEffects);
 void EnTg_SpawnHeart(EnTg* this, EnTgHeartEffect* effect, Vec3f* heartStartPos, s32 numEffects);
 
 const ActorInit En_Tg_InitVars = {
@@ -91,7 +90,9 @@ static DamageTable sDamageTable = {
     /* Powder Keg     */ DMG_ENTRY(0, 0x0),
 };
 
-static AnimationInfoS sAnimationInfo = { &gHoneyAndDarlingIdleAnim, 1.0f, 0, -1, ANIMMODE_LOOP, 0 };
+static AnimationInfoS sAnimationInfo[] = {
+    { &gHoneyAndDarlingIdleAnim, 1.0f, 0, -1, ANIMMODE_LOOP, 0 },
+};
 
 void EnTg_ChangeAnim(SkelAnime* skelAnime, AnimationInfoS* animationInfo, s16 animIndex) {
     f32 endFrame;
@@ -125,7 +126,7 @@ void EnTg_Init(Actor* thisx, PlayState* play) {
     ActorShape_Init(&this->actor.shape, 0.0f, NULL, 0.0f);
     SkelAnime_InitFlex(play, &this->skelAnime, &gHoneyAndDarlingSkel, NULL, this->jointTable, this->morphTable,
                        HONEY_AND_DARLING_LIMB_MAX);
-    EnTg_ChangeAnim(&this->skelAnime, &sAnimationInfo, 0);
+    EnTg_ChangeAnim(&this->skelAnime, sAnimationInfo, 0);
     Collider_InitCylinder(play, &this->collider);
     Collider_SetCylinder(play, &this->collider, &this->actor, &sCylinderInit);
     CollisionCheck_SetInfo2(&this->actor.colChkInfo, &sDamageTable, &sColChkInfoInit);
@@ -175,17 +176,17 @@ void EnTg_PostLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3s* rot, 
     EnTg* this = THIS;
     Vec3f zeroVec = { 0.0f, 0.0f, 0.0f };
 
+void EnTg_PostLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3s* rot, Actor* thisx) {
+    EnTg* this = THIS;
+    Vec3f zeroVec = { 0.0f, 0.0f, 0.0f };
+
     if (limbIndex == HONEY_AND_DARLING_LIMB_MAN_HEAD) {
         Matrix_MultVec3f(&zeroVec, &this->actor.focus.pos);
     }
 }
 
-void EnTg_Draw(Actor* thisx, PlayState* play) {
-    EnTg* this = THIS;
-    GraphicsContext* gfxCtx;
-
     Matrix_Push();
-    EnTg_DrawHeart(play, this->effects, ARRAY_COUNT(this->effects));
+    EnTg_DrawHearts(play, this->effects, ARRAY_COUNT(this->effects));
     Matrix_Pop();
 
     OPEN_DISPS(play->state.gfxCtx);
@@ -252,7 +253,7 @@ void EnTg_UpdateHearts(PlayState* play, EnTgHeartEffect* effect, s32 numEffects)
     }
 }
 
-void EnTg_DrawHeart(PlayState* play, EnTgHeartEffect* effect, s32 numEffects) {
+void EnTg_DrawHearts(PlayState* play, EnTgHeartEffect* effect, s32 numEffects) {
     s32 i;
     s32 isMaterialApplied = false;
 

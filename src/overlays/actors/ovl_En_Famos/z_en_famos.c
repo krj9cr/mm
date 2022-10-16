@@ -154,7 +154,7 @@ static AnimatedMaterial* sEmblemAnimatedMats[] = {
 };
 
 static InitChainEntry sInitChain[] = {
-    ICHAIN_S8(hintId, 15, ICHAIN_CONTINUE),
+    ICHAIN_S8(hintId, TATL_HINT_ID_DEATH_ARMOS, ICHAIN_CONTINUE),
     ICHAIN_F32(targetArrowOffset, 3500, ICHAIN_STOP),
 };
 
@@ -723,7 +723,7 @@ void EnFamos_DeathFade(EnFamos* this, PlayState* play) {
         if (enBom != NULL) {
             enBom->parent = NULL;
         }
-        Actor_MarkForDeath(&this->actor);
+        Actor_Kill(&this->actor);
     }
 }
 
