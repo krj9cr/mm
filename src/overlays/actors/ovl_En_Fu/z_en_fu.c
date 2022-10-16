@@ -103,6 +103,8 @@ static ColliderCylinderInit sCylinderInit = {
     { 20, 50, 0, { 0, 0, 0 } },
 };
 
+// Called in ~3 places, usually after
+// if (this->unk_546 == 1) {
 void func_809616E0(EnFu* this, PlayState* play) {
     s32 i;
     f32 temp_f20;
@@ -144,6 +146,7 @@ void func_809616E0(EnFu* this, PlayState* play) {
     }
 }
 
+// Only called in Init
 void func_809619D0(EnFu* this, PlayState* play) {
     s32 i;
     Path* path = &play->setupPathList[ENFU_GET_FF00(&this->actor)];
@@ -370,6 +373,7 @@ void func_8096209C(EnFu* this, PlayState* play) {
     this->actor.focus.pos.z += this->actor.world.pos.z;
 }
 
+// Called in Init and a couple other places
 void func_809622FC(EnFu* this) {
     Actor_ChangeAnimationByInfo(&this->skelAnime, sAnimationInfo, 1);
     this->actionFunc = func_80962340;
@@ -1401,18 +1405,17 @@ void EnFu_Draw(Actor* thisx, PlayState* play) {
 void func_80964694(EnFu* this, EnFuHeartEffect* effect, Vec3f* heartStartPos, s32 numEffects) {
     Vec3f heartVelocity = { 0.0f, 1.5f, 0.0f };
     Vec3f zeroVec = { 0.0f, 0.0f, 0.0f };
-    s32 i;
+    s32 i = 0;
 
-    if (i < len) {
-        ptr->unk_36 = 1;
-        ptr->unk_08 = *arg2;
-        ptr->unk_20 = sp2C;
-        ptr->unk_14 = sp20;
-        ptr->unk_00 = 0.01f;
-
-        ptr->unk_08.x += 4.0f * Math_SinS(this->actor.shape.rot.y);
-        ptr->unk_08.z += 4.0f * Math_CosS(this->actor.shape.rot.y);
-        ptr->unk_37 = 16;
+    if (i < numEffects) {
+        effect->isEnabled = true;
+        effect->pos = *heartStartPos;
+        effect->velocity = heartVelocity;
+        effect->accel = zeroVec;
+        effect->scale = 0.01f;
+        effect->pos.x += 4.0f * Math_SinS(this->actor.shape.rot.y);
+        effect->pos.z += 4.0f * Math_CosS(this->actor.shape.rot.y);
+        effect->timer = 16;
     }
 }
 
@@ -1442,7 +1445,7 @@ void func_809647EC(PlayState* play, EnFuHeartEffect* effect, s32 numEffects) {
     }
 }
 
-// EnFu_DrawHeart(s)
+// EnFu_DrawHearts
 void func_80964950(PlayState* play, EnFuHeartEffect* effect, s32 numEffects) {
     s32 i;
     s32 isMaterialApplied = false;
@@ -1452,11 +1455,11 @@ void func_80964950(PlayState* play, EnFuHeartEffect* effect, s32 numEffects) {
     POLY_OPA_DISP = func_801660B8(play, POLY_OPA_DISP);
     POLY_OPA_DISP = func_8012C724(POLY_OPA_DISP);
 
-    for (i = 0; i < len; i++, ptr++) {
-        if (ptr->unk_36 == 1) {
-            if (!flag) {
-                gSPDisplayList(POLY_OPA_DISP++, object_mu_DL_00B0A0);
-                flag = true;
+    for (i = 0; i < numEffects; i++, effect++) {
+        if (effect->isEnabled == true) {
+            if (!isMaterialApplied) {
+                gSPDisplayList(POLY_OPA_DISP++, gHoneyAndDarlingHeartMaterialDL);
+                isMaterialApplied = true;
             }
             Matrix_Translate(effect->pos.x, effect->pos.y, effect->pos.z, MTXMODE_NEW);
             Matrix_ReplaceRotation(&play->billboardMtxF);

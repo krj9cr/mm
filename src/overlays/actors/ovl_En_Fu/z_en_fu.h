@@ -10,16 +10,16 @@ typedef void (*EnFuActionFunc)(struct EnFu*, PlayState*);
 
 #define ENFU_GET_FF00(thisx) (((thisx)->params >> 8) & 0xFF)
 
-typedef struct {
+typedef struct EnFuHeartEffect {
     /* 0x00 */ f32 scale;
     /* 0x04 */ UNK_TYPE1 unk_04[0x4];
     /* 0x08 */ Vec3f pos;
     /* 0x14 */ Vec3f accel;
-    /* 0x20 */ Vec3f velocity; // velocity
-    /* 0x2C */ s16 angle; // angle
+    /* 0x20 */ Vec3f velocity;
+    /* 0x2C */ s16 angle;
     /* 0x2E */ UNK_TYPE1 unk_2E[0x8];
-    /* 0x36 */ u8 isEnabled; // isEnabled
-    /* 0x37 */ u8 timer; // timer
+    /* 0x36 */ u8 isEnabled;
+    /* 0x37 */ u8 timer;
 } EnFuHeartEffect; // size = 0x38
 
 typedef struct EnFu {

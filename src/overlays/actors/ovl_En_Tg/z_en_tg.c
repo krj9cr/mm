@@ -176,14 +176,14 @@ void EnTg_PostLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3s* rot, 
     EnTg* this = THIS;
     Vec3f zeroVec = { 0.0f, 0.0f, 0.0f };
 
-void EnTg_PostLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3s* rot, Actor* thisx) {
-    EnTg* this = THIS;
-    Vec3f zeroVec = { 0.0f, 0.0f, 0.0f };
-
     if (limbIndex == HONEY_AND_DARLING_LIMB_MAN_HEAD) {
         Matrix_MultVec3f(&zeroVec, &this->actor.focus.pos);
     }
 }
+
+void EnTg_Draw(Actor* thisx, PlayState* play) {
+    s32 pad;
+    EnTg* this = THIS;
 
     Matrix_Push();
     EnTg_DrawHearts(play, this->effects, ARRAY_COUNT(this->effects));
