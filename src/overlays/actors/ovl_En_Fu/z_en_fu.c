@@ -51,9 +51,9 @@ void func_80963FF8(EnFu* this, PlayState* play);
 void func_8096413C(EnFu* this, PlayState* play);
 void func_80964190(EnFu* this, PlayState* play);
 void func_8096426C(EnFu* this, PlayState* play);
-void func_80964694(EnFu* this, EnFuHeartEffect* effect, Vec3f* arg2, s32 numEffects);
-void func_809647EC(PlayState* play, EnFuHeartEffect* effect, s32 numEffects);
-void func_80964950(PlayState* play, EnFuHeartEffect* effect, s32 numEffects);
+void EnFu_SpawnHeart(EnFu* this, EnFuHeartEffect* effect, Vec3f* arg2, s32 numEffects);
+void EnFu_UpdateHearts(PlayState* play, EnFuHeartEffect* effect, s32 numEffects);
+void EnFu_DrawHearts(PlayState* play, EnFuHeartEffect* effect, s32 numEffects);
 
 const ActorInit En_Fu_InitVars = {
     ACTOR_EN_FU,
@@ -253,6 +253,7 @@ s32 func_80961D10(EnFu* this) {
     return false;
 }
 
+// Called in Update only
 void func_80961D7C(PlayState* play) {
     Actor* explosive = play->actorCtx.actorLists[ACTORCAT_EXPLOSIVES].first;
 
@@ -333,6 +334,7 @@ void func_80961F38(PlayState* play, Vec3f* arg1, s16* arg2, s16 arg3, s16 arg4, 
     Math_SmoothStepToS(&arg2[2], 0, 6, 2000, 100);
 }
 
+// Called in Update
 void func_8096209C(EnFu* this, PlayState* play) {
     Vec3f sp34;
 
@@ -1175,6 +1177,7 @@ void func_80963F88(EnFu* this, PlayState* play) {
     }
 }
 
+// Called in func_8096326C, only
 void func_80963FF8(EnFu* this, PlayState* play) {
     Player* player = GET_PLAYER(play);
 
@@ -1186,7 +1189,7 @@ void func_80963FF8(EnFu* this, PlayState* play) {
     }
 }
 
-// Similar to EnTg_Idle
+// Similar to EnTg_Idle, called in Update only
 void func_80964034(EnFu* this, PlayState* play) {
     Vec3f heartStartPos;
 
@@ -1194,11 +1197,12 @@ void func_80964034(EnFu* this, PlayState* play) {
         this->spawnHeartTimer = 12;
         heartStartPos = this->actor.world.pos;
         heartStartPos.y += 62.0f;
-        func_80964694(this, this->effects, &heartStartPos, ARRAY_COUNT(this->effects));
+        EnFu_SpawnHeart(this, this->effects, &heartStartPos, ARRAY_COUNT(this->effects));
     }
-    func_809647EC(play, this->effects, ARRAY_COUNT(this->effects));
+    EnFu_UpdateHearts(play, this->effects, ARRAY_COUNT(this->effects));
 }
 
+// Called in Update only
 void func_809640D8(EnFu* this, PlayState* play) {
     if ((this->actionFunc == func_80962A10) || (this->actionFunc == func_80962BCC) ||
         (this->actionFunc == func_80962D60) || (this->actionFunc == func_80962F4C) ||
@@ -1326,6 +1330,7 @@ void func_8096426C(EnFu* this, PlayState* play) {
     }
 }
 
+// Called in Update
 void func_809642E0(EnFu* this, PlayState* play) {
     Collider_UpdateCylinder(&this->actor, &this->collider);
     if (this->unk_542 == 0) {
@@ -1385,7 +1390,7 @@ void EnFu_Draw(Actor* thisx, PlayState* play) {
     EnFu* this = THIS;
 
     Matrix_Push();
-    func_80964950(play, this->effects, ARRAY_COUNT(this->effects));
+    EnFu_DrawHearts(play, this->effects, ARRAY_COUNT(this->effects));
     Matrix_Pop();
 
     OPEN_DISPS(play->state.gfxCtx);
@@ -1401,8 +1406,7 @@ void EnFu_Draw(Actor* thisx, PlayState* play) {
     CLOSE_DISPS(play->state.gfxCtx);
 }
 
-// EnFu_SpawnHeart
-void func_80964694(EnFu* this, EnFuHeartEffect* effect, Vec3f* heartStartPos, s32 numEffects) {
+void EnFu_SpawnHeart(EnFu* this, EnFuHeartEffect* effect, Vec3f* heartStartPos, s32 numEffects) {
     Vec3f heartVelocity = { 0.0f, 1.5f, 0.0f };
     Vec3f zeroVec = { 0.0f, 0.0f, 0.0f };
     s32 i;
@@ -1421,8 +1425,7 @@ void func_80964694(EnFu* this, EnFuHeartEffect* effect, Vec3f* heartStartPos, s3
     }
 }
 
-// EnFu_UpdateHearts
-void func_809647EC(PlayState* play, EnFuHeartEffect* effect, s32 numEffects) {
+void EnFu_UpdateHearts(PlayState* play, EnFuHeartEffect* effect, s32 numEffects) {
     Vec3f zeroVec = { 0.0f, 0.0f, 0.0f };
     s16 yaw = Camera_GetInputDirYaw(GET_ACTIVE_CAM(play));
     s32 i;
@@ -1447,8 +1450,7 @@ void func_809647EC(PlayState* play, EnFuHeartEffect* effect, s32 numEffects) {
     }
 }
 
-// EnFu_DrawHearts
-void func_80964950(PlayState* play, EnFuHeartEffect* effect, s32 numEffects) {
+void EnFu_DrawHearts(PlayState* play, EnFuHeartEffect* effect, s32 numEffects) {
     s32 i;
     s32 isMaterialApplied = false;
 
