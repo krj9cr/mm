@@ -1189,8 +1189,7 @@ void func_80963FF8(EnFu* this, PlayState* play) {
     }
 }
 
-// Similar to EnTg_Idle, called in Update only
-void func_80964034(EnFu* this, PlayState* play) {
+void EnFu_IdleHearts(EnFu* this, PlayState* play) {
     Vec3f heartStartPos;
 
     if (DECR(this->spawnHeartTimer) == 0) {
@@ -1351,7 +1350,7 @@ void EnFu_Update(Actor* thisx, PlayState* play) {
     SkelAnime_Update(&this->skelAnime);
     func_80961D7C(play);
     func_809640D8(this, play);
-    func_80964034(this, play);
+    EnFu_IdleHearts(this, play);
 }
 
 s32 EnFu_OverrideLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3f* pos, Vec3s* rot, Actor* thisx) {
