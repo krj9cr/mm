@@ -218,13 +218,14 @@ void EnFu_Init(Actor* thisx, PlayState* play) {
         func_809622FC(this);
         this->actor.targetMode = 6;
         func_809619D0(this, play);
-        if (CURRENT_DAY == 2) {
-            Vec3f sp40 = this->actor.child->home.pos;
 
-            this->unk_2D4 =
-                (BgFuMizu*)Actor_Spawn(&play->actorCtx, play, ACTOR_BG_FU_MIZU, sp40.x, sp40.y, sp40.z, 0, 0, 0, 0);
+        if (CURRENT_DAY == 2) {
+            Vec3f bgFuMizuPos = this->actor.child->home.pos;
+
+            this->bgFuMizu =
+                (BgFuMizu*)Actor_Spawn(&play->actorCtx, play, ACTOR_BG_FU_MIZU, bgFuMizuPos.x, bgFuMizuPos.y, bgFuMizuPos.z, 0, 0, 0, 0);
         } else {
-            this->unk_2D4 = NULL;
+            this->bgFuMizu = NULL;
         }
     }
 }
@@ -253,7 +254,7 @@ s32 func_80961D10(EnFu* this) {
     return false;
 }
 
-// Called in Update only
+// Called in Update only, checks for bombs in basket?
 void func_80961D7C(PlayState* play) {
     Actor* explosive = play->actorCtx.actorLists[ACTORCAT_EXPLOSIVES].first;
 
@@ -376,11 +377,15 @@ void func_8096209C(EnFu* this, PlayState* play) {
 }
 
 // Called in Init and a couple other places
+// PROGRESS
+// EnFu_SetupIdle? - maybe they go back to this after a minigame?
 void func_809622FC(EnFu* this) {
     Actor_ChangeAnimationByInfo(&this->skelAnime, sAnimationInfo, 1);
     this->actionFunc = func_80962340;
 }
 
+// assigned to this->actionFunc
+// EnFu_Talk
 void func_80962340(EnFu* this, PlayState* play) {
     Player* player = GET_PLAYER(play);
 
@@ -552,9 +557,9 @@ void func_80962660(EnFu* this, PlayState* play) {
                     func_809629F8(this);
                 } else if (this->unk_542 == 1) {
                     if (this->unk_546 == 1) {
-                        func_80961F00(play);
+                        func_80961F00(play); // does stuff with fuKago
                     }
-                    func_80962BA8(this);
+                    func_80962BA8(this); // does stuff with water
                 } else if (this->unk_542 == 2) {
                     if (this->unk_546 == 1) {
                         func_80961EC8(play);
@@ -666,7 +671,7 @@ void func_80962A10(EnFu* this, PlayState* play) {
 }
 
 void func_80962BA8(EnFu* this) {
-    BgFuMizu* mizu = this->unk_2D4;
+    BgFuMizu* mizu = this->bgFuMizu;
 
     this->unk_54A = 0;
     mizu->unk_160 = 1;
@@ -832,8 +837,8 @@ void func_809632D0(EnFu* this) {
 
     gSaveContext.save.weekEventReg[8] &= (u8)~1;
 
-    if (this->unk_2D4 != NULL) {
-        BgFuMizu* mizu = this->unk_2D4;
+    if (this->bgFuMizu != NULL) {
+        BgFuMizu* mizu = this->bgFuMizu;
 
         mizu->unk_160 = 0;
     }

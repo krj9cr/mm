@@ -29,7 +29,7 @@ typedef struct EnFu {
     /* 0x1D4 */ EnFuActionFunc actionFunc;
     /* 0x1D8 */ Vec3s jointTable[21];
     /* 0x256 */ Vec3s morphTable[21];
-    /* 0x2D4 */ BgFuMizu* unk_2D4;
+    /* 0x2D4 */ BgFuMizu* bgFuMizu;
     /* 0x2D8 */ EnFuHeartEffect effects[10];
     /* 0x508 */ Vec3f unk_508;
     /* 0x514 */ Vec3f unk_514;
