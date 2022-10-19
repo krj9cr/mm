@@ -33,20 +33,20 @@ typedef struct EnFu {
     /* 0x2D8 */ EnFuHeartEffect effects[10];
     /* 0x508 */ Vec3f unk_508;
     /* 0x514 */ Vec3f unk_514;
-    /* 0x520 */ s32 unk_520;
+    /* 0x520 */ s32 pathPointsCount;
     /* 0x524 */ s16 unk_524[3];
     /* 0x52A */ s16 unk_52A[3];
     /* 0x530 */ UNK_TYPE1 unk530[0x8];
-    /* 0x538 */ Vec3s* unk_538;
-    /* 0x53C */ s16 unk_53C;
+    /* 0x538 */ Vec3s* pathPoints;
+    /* 0x53C */ s16 unk_53C; // flag set to 0, 1, 2, changes to 1 when man looks at link, 2 for woman, 0 for neither
     /* 0x53E */ s16 unk_53E;
     /* 0x540 */ s16 unk_540;
-    /* 0x542 */ s16 unk_542;
-    /* 0x544 */ s16 unk_544;
-    /* 0x546 */ s16 unk_546;
-    /* 0x548 */ s16 unk_548;
-    /* 0x54A */ s16 unk_54A;
-    /* 0x54C */ s16 unk_54C;
+    /* 0x542 */ s16 unk_542; // mini game index? set to 0, 1, 2 depending on day
+    /* 0x544 */ s16 unk_544; // actorId, set to ACTOR_EN_FU_MATO or ACTOR_EN_FU_KAGO
+    /* 0x546 */ s16 unk_546; // if == 1, stuff happens, set to 1 for Target
+    /* 0x548 */ s16 unk_548; // score?
+    /* 0x54A */ s16 unk_54A; // initialized to 1, usually set to 0-3, related to processing talk request?
+    /* 0x54C */ s16 unk_54C; // max score? set to 16, incremented each time an actor is spawned
     /* 0x54E */ s16 spawnHeartTimer;
     /* 0x550 */ s16 unk_550;
     /* 0x552 */ u16 unk_552;
