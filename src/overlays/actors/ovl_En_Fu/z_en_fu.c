@@ -105,54 +105,53 @@ static ColliderCylinderInit sCylinderInit = {
 
 // Called in ~3 places, usually after
 // if (this->gameWasPlayedFlag == true) {
-// Setup Minigame stuff?
-void func_809616E0(EnFu* this, PlayState* play) {
+// func_809616E0
+void EnFu_InitGameTargets(EnFu* this, PlayState* play) {
     s32 i;
-    f32 temp_f20;
-    f32 temp_f22;
-    s16 atan;
+    f32 opposite;
+    f32 adjacent;
+    s16 rotY;
     s16 dekuTargetShootingGameFlag = false;
-    Vec3f sp94;
+    Vec3f pos;
 
     if ((gSaveContext.save.playerForm == PLAYER_FORM_DEKU) && (CURRENT_DAY == 3)) {
         dekuTargetShootingGameFlag = true;
     }
     this->numTargets = 0;
 
-    // Spawn targets or bomb baskets around the room
     for (i = 0; i < this->pathPointsCount; i++) {
-        temp_f20 = this->actor.world.pos.x - this->pathPoints[i].x;
-        temp_f22 = this->actor.world.pos.z - this->pathPoints[i].z;
-        atan = Math_FAtan2F(temp_f22, temp_f20);
+        opposite = this->actor.world.pos.x - this->pathPoints[i].x;
+        adjacent = this->actor.world.pos.z - this->pathPoints[i].z;
+        rotY = Math_FAtan2F(adjacent, opposite);
 
-        // Spawn half as many targets for Deku Scrub since blowing bubbles 
-        // is more challenging than shooting the bow
+        // Spawn half as many targets for Deku Scrub since blowing bubbles is more challenging than shooting the bow
         if (!dekuTargetShootingGameFlag || ((i % 2) != 0)) {
             Actor_Spawn(&play->actorCtx, play, this->gameTargetActorId, this->pathPoints[i].x, this->pathPoints[i].y,
-                        this->pathPoints[i].z, 0, atan, 0, i);
+                        this->pathPoints[i].z, 0, rotY, 0, i);
             this->numTargets++;
         }
 
+        // If a game was already played while in the shop, an animation around the targets plays as they respawn,
+        // and the targets start small and grow to normal size
         if (this->gameWasPlayedFlag == true) {
-            Vec3f sp88 = { 0.0f, 0.0f, 0.0f };
-            Vec3f sp7C = { 0.0f, 0.2f, 0.0f };
-            Color_RGBA8 sp78 = { 255, 255, 255, 255 };
-            Color_RGBA8 sp74 = { 198, 198, 198, 255 };
+            Vec3f velocity = { 0.0f, 0.0f, 0.0f };
+            Vec3f accel = { 0.0f, 0.2f, 0.0f };
+            Color_RGBA8 primColor = { 255, 255, 255, 255 };
+            Color_RGBA8 envColor = { 198, 198, 198, 255 };
 
-            sp94.x = this->pathPoints[i].x;
-            sp94.y = this->pathPoints[i].y;
-            sp94.z = this->pathPoints[i].z;
-            func_800B0EB0(play, &sp94, &sp88, &sp7C, &sp78, &sp74, 100, 150, 10);
-            sp94.x -= 0.1f * temp_f20;
-            sp94.z -= 0.1f * temp_f22;
-            func_800B3030(play, &sp94, &sp88, &sp7C, 100, 0, 3);
+            pos.x = this->pathPoints[i].x;
+            pos.y = this->pathPoints[i].y;
+            pos.z = this->pathPoints[i].z;
+            func_800B0EB0(play, &pos, &velocity, &accel, &primColor, &envColor, 100, 150, 10);
+            pos.x -= 0.1f * opposite;
+            pos.z -= 0.1f * adjacent;
+            func_800B3030(play, &pos, &velocity, &accel, 100, 0, 3);
         }
     }
 }
 
-// Only called in Init
-// EnFu_InitPath... and something else maybe
-void func_809619D0(EnFu* this, PlayState* play) {
+// func_809619D0
+void EnFu_InitGame(EnFu* this, PlayState* play) {
     s32 i;
     Path* path = &play->setupPathList[ENFU_GET_FF00(&this->actor)];
 
@@ -184,7 +183,7 @@ void func_809619D0(EnFu* this, PlayState* play) {
 
     this->pathPointsCount = path->count;
     this->pathPoints = Lib_SegmentedToVirtual(path->points);
-    func_809616E0(this, play);
+    EnFu_InitGameTargets(this, play);
 }
 
 void EnFu_Init(Actor* thisx, PlayState* play) {
@@ -222,7 +221,7 @@ void EnFu_Init(Actor* thisx, PlayState* play) {
         this->unk_550 = 0;
         func_809622FC(this);
         this->actor.targetMode = 6;
-        func_809619D0(this, play);
+        EnFu_InitGame(this, play);
 
         if (CURRENT_DAY == 2) {
             Vec3f bgFuMizuPos = this->actor.child->home.pos;
@@ -664,7 +663,7 @@ void func_80962A10(EnFu* this, PlayState* play) {
     player->stateFlags1 &= ~PLAYER_STATE1_20;
     Interface_StartTimer(TIMER_ID_MINIGAME_2, 60);
     if (this->gameWasPlayedFlag == true) {
-        func_809616E0(this, play);
+        EnFu_InitGameTargets(this, play);
     } else {
         this->gameWasPlayedFlag = true;
     }
@@ -702,7 +701,7 @@ void func_80962BCC(EnFu* this, PlayState* play) {
     Interface_StartTimer(TIMER_ID_MINIGAME_2, 60);
 
     if (this->gameWasPlayedFlag == true) {
-        func_809616E0(this, play);
+        EnFu_InitGameTargets(this, play);
     } else {
         this->gameWasPlayedFlag = true;
     }
@@ -733,7 +732,7 @@ void func_80962D60(EnFu* this, PlayState* play) {
     Interface_StartTimer(TIMER_ID_MINIGAME_2, 60);
 
     if (this->gameWasPlayedFlag == true) {
-        func_809616E0(this, play);
+        EnFu_InitGameTargets(this, play);
     } else {
         this->gameWasPlayedFlag = true;
     }
