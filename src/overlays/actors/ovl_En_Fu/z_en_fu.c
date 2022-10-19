@@ -104,32 +104,36 @@ static ColliderCylinderInit sCylinderInit = {
 };
 
 // Called in ~3 places, usually after
-// if (this->unk_546 == 1) {
+// if (this->gameWasPlayedFlag == true) {
+// Setup Minigame stuff?
 void func_809616E0(EnFu* this, PlayState* play) {
     s32 i;
     f32 temp_f20;
     f32 temp_f22;
     s16 atan;
-    s16 spA0 = false;
+    s16 dekuTargetShootingGameFlag = false;
     Vec3f sp94;
 
     if ((gSaveContext.save.playerForm == PLAYER_FORM_DEKU) && (CURRENT_DAY == 3)) {
-        spA0 = true;
+        dekuTargetShootingGameFlag = true;
     }
-    this->unk_54C = 0;
+    this->numTargets = 0;
 
+    // Spawn targets or bomb baskets around the room
     for (i = 0; i < this->pathPointsCount; i++) {
         temp_f20 = this->actor.world.pos.x - this->pathPoints[i].x;
         temp_f22 = this->actor.world.pos.z - this->pathPoints[i].z;
         atan = Math_FAtan2F(temp_f22, temp_f20);
 
-        if (!spA0 || ((i % 2) != 0)) {
-            Actor_Spawn(&play->actorCtx, play, this->unk_544, this->pathPoints[i].x, this->pathPoints[i].y,
+        // Spawn half as many targets for Deku Scrub since blowing bubbles 
+        // is more challenging than shooting the bow
+        if (!dekuTargetShootingGameFlag || ((i % 2) != 0)) {
+            Actor_Spawn(&play->actorCtx, play, this->gameTargetActorId, this->pathPoints[i].x, this->pathPoints[i].y,
                         this->pathPoints[i].z, 0, atan, 0, i);
-            this->unk_54C++;
+            this->numTargets++;
         }
 
-        if (this->unk_546 == 1) {
+        if (this->gameWasPlayedFlag == true) {
             Vec3f sp88 = { 0.0f, 0.0f, 0.0f };
             Vec3f sp7C = { 0.0f, 0.2f, 0.0f };
             Color_RGBA8 sp78 = { 255, 255, 255, 255 };
@@ -154,27 +158,27 @@ void func_809619D0(EnFu* this, PlayState* play) {
 
     switch (CURRENT_DAY) {
         case 1:
-            this->unk_542 = 2;
-            this->unk_544 = ACTOR_EN_FU_MATO;
+            this->gameIndex = 2;
+            this->gameTargetActorId = ACTOR_EN_FU_MATO;
             break;
 
         case 2:
-            this->unk_542 = 1;
-            this->unk_544 = ACTOR_EN_FU_KAGO;
+            this->gameIndex = 1;
+            this->gameTargetActorId = ACTOR_EN_FU_KAGO;
             break;
 
         case 3:
-            this->unk_542 = 0;
-            this->unk_544 = ACTOR_EN_FU_MATO;
+            this->gameIndex = 0;
+            this->gameTargetActorId = ACTOR_EN_FU_MATO;
             break;
 
         default:
-            this->unk_544 = ACTOR_EN_FU_MATO;
-            this->unk_542 = 2;
+            this->gameTargetActorId = ACTOR_EN_FU_MATO;
+            this->gameIndex = 2;
             break;
     }
 
-    for (i = 0; i < this->unk_542; i++) {
+    for (i = 0; i < this->gameIndex; i++) {
         path = &play->setupPathList[path->unk1];
     }
 
@@ -208,9 +212,9 @@ void EnFu_Init(Actor* thisx, PlayState* play) {
         this->actor.gravity = -0.2f;
         this->actor.shape.rot.y += 0x4000;
         this->actor.world.rot = this->actor.shape.rot;
-        this->unk_546 = 0;
+        this->gameWasPlayedFlag = false;
         this->unk_54A = 1;
-        this->unk_54C = 0;
+        this->numTargets = 0;
         this->unk_53C = 0;
         this->unk_53E = 0;
         this->unk_540 = 0;
@@ -240,11 +244,11 @@ void EnFu_Destroy(Actor* thisx, PlayState* play) {
 }
 
 s32 func_80961D10(EnFu* this) {
-    if ((this->collider.base.acFlags & AC_HIT) && (this->unk_542 == 0)) {
+    if ((this->collider.base.acFlags & AC_HIT) && (this->gameIndex == 0)) {
         return true;
     }
 
-    if ((this->collider.base.ocFlags1 & OC1_HIT) && (this->unk_542 == 2)) {
+    if ((this->collider.base.ocFlags1 & OC1_HIT) && (this->gameIndex == 2)) {
         Actor* actor = this->collider.base.oc;
 
         if (actor->id == ACTOR_EN_BOM_CHU) {
@@ -551,18 +555,18 @@ void func_80962660(EnFu* this, PlayState* play) {
                 this->unk_53C = 0;
                 Actor_ChangeAnimationByInfo(&this->skelAnime, sAnimationInfo, 3);
                 func_801A2BB8(NA_BGM_TIMED_MINI_GAME);
-                if (this->unk_542 == 0) {
-                    if (this->unk_546 == 1) {
+                if (this->gameIndex == 0) {
+                    if (this->gameWasPlayedFlag == true) {
                         func_80961EC8(play);
                     }
                     func_809629F8(this);
-                } else if (this->unk_542 == 1) {
-                    if (this->unk_546 == 1) {
+                } else if (this->gameIndex == 1) {
+                    if (this->gameWasPlayedFlag == true) {
                         func_80961F00(play); // does stuff with fuKago
                     }
                     func_80962BA8(this); // does stuff with water
-                } else if (this->unk_542 == 2) {
-                    if (this->unk_546 == 1) {
+                } else if (this->gameIndex == 2) {
+                    if (this->gameWasPlayedFlag == true) {
                         func_80961EC8(play);
                     }
                     func_80962D48(this);
@@ -643,6 +647,7 @@ void func_809629F8(EnFu* this) {
     this->actionFunc = func_80962A10;
 }
 
+// EnFu_StartMinigame
 void func_80962A10(EnFu* this, PlayState* play) {
     Player* player = GET_PLAYER(play);
     BgFuKaiten* fuKaiten = (BgFuKaiten*)this->actor.child;
@@ -658,10 +663,10 @@ void func_80962A10(EnFu* this, PlayState* play) {
     play_sound(NA_SE_SY_FOUND);
     player->stateFlags1 &= ~PLAYER_STATE1_20;
     Interface_StartTimer(TIMER_ID_MINIGAME_2, 60);
-    if (this->unk_546 == 1) {
+    if (this->gameWasPlayedFlag == true) {
         func_809616E0(this, play);
     } else {
-        this->unk_546 = 1;
+        this->gameWasPlayedFlag = true;
     }
 
     if ((gSaveContext.save.playerForm == PLAYER_FORM_DEKU) && gSaveContext.save.playerData.isMagicAcquired) {
@@ -696,10 +701,10 @@ void func_80962BCC(EnFu* this, PlayState* play) {
     player->stateFlags3 |= PLAYER_STATE3_400000;
     Interface_StartTimer(TIMER_ID_MINIGAME_2, 60);
 
-    if (this->unk_546 == 1) {
+    if (this->gameWasPlayedFlag == true) {
         func_809616E0(this, play);
     } else {
-        this->unk_546 = 1;
+        this->gameWasPlayedFlag = true;
     }
 
     play->unk_1887E = 30;
@@ -727,10 +732,10 @@ void func_80962D60(EnFu* this, PlayState* play) {
     player->stateFlags3 |= PLAYER_STATE3_400000;
     Interface_StartTimer(TIMER_ID_MINIGAME_2, 60);
 
-    if (this->unk_546 == 1) {
+    if (this->gameWasPlayedFlag == true) {
         func_809616E0(this, play);
     } else {
-        this->unk_546 = 1;
+        this->gameWasPlayedFlag = true;
     }
 
     play->unk_1887D = 30;
@@ -738,7 +743,7 @@ void func_80962D60(EnFu* this, PlayState* play) {
 }
 
 void func_80962EBC(EnFu* this, PlayState* play) {
-    if (this->unk_542 != 0) {
+    if (this->gameIndex != 0) {
         if (this->actor.cutscene != -1) {
             Camera_ChangeDataIdx(play->cameraPtrs[CAM_ID_MAIN],
                                  ActorCutscene_GetCutscene(this->actor.cutscene)->csCamSceneDataId);
@@ -757,7 +762,7 @@ void func_80962F4C(EnFu* this, PlayState* play) {
     Player* player = GET_PLAYER(play);
     BgFuKaiten* fuKaiten = (BgFuKaiten*)this->actor.child;
 
-    switch (this->unk_542) {
+    switch (this->gameIndex) {
         case 0:
             if (gSaveContext.save.playerForm == PLAYER_FORM_HUMAN) {
                 player->stateFlags3 |= PLAYER_STATE3_400;
@@ -774,11 +779,11 @@ void func_80962F4C(EnFu* this, PlayState* play) {
     }
 
     if (gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] < SECONDS_TO_TIMER(20)) {
-        s16 val = D_80964B00[this->unk_542] + 200;
+        s16 val = D_80964B00[this->gameIndex] + 200;
 
         Math_SmoothStepToS(&fuKaiten->rotationSpeed, val, 10, 5, 5);
     } else if (gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] < SECONDS_TO_TIMER(40)) {
-        s16 val = D_80964B00[this->unk_542] + 100;
+        s16 val = D_80964B00[this->gameIndex] + 100;
 
         Math_SmoothStepToS(&fuKaiten->rotationSpeed, val, 10, 5, 5);
     }
@@ -789,11 +794,11 @@ void func_80962F4C(EnFu* this, PlayState* play) {
 
     if ((!DynaPolyActor_IsInRidingRotatingState((DynaPolyActor*)this->actor.child) &&
          (player->actor.bgCheckFlags & 1)) ||
-        (gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] <= SECONDS_TO_TIMER(0)) || (this->unk_548 == this->unk_54C)) {
+        (gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] <= SECONDS_TO_TIMER(0)) || (this->unk_548 == this->numTargets)) {
         player->stateFlags3 &= ~PLAYER_STATE3_400000;
         func_80961E88(play);
         player->stateFlags1 |= PLAYER_STATE1_20;
-        if (this->unk_548 < this->unk_54C) {
+        if (this->unk_548 < this->numTargets) {
             if (gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] == SECONDS_TO_TIMER(0)) {
                 Message_StartTextbox(play, 0x2885, &this->actor);
                 this->unk_552 = 0x2885;
@@ -1127,7 +1132,7 @@ void func_809639D0(EnFu* this, PlayState* play) {
 }
 
 void func_80963DE4(EnFu* this, PlayState* play) {
-    switch (this->unk_542) {
+    switch (this->gameIndex) {
         case 0:
             if (gSaveContext.save.playerForm != PLAYER_FORM_HUMAN) {
                 Message_StartTextbox(play, 0x2875, &this->actor);
@@ -1174,10 +1179,10 @@ void func_80963F44(EnFu* this, PlayState* play) {
 }
 
 void func_80963F88(EnFu* this, PlayState* play) {
-    if (this->unk_542 == 1) {
+    if (this->gameIndex == 1) {
         Camera_ChangeSetting(play->cameraPtrs[CAM_ID_MAIN], CAM_SET_HONEY_AND_DARLING_2);
         play->unk_1887E = 0;
-    } else if (this->unk_542 == 2) {
+    } else if (this->gameIndex == 2) {
         play->unk_1887D = 0;
         Camera_ChangeSetting(play->cameraPtrs[CAM_ID_MAIN], CAM_SET_HONEY_AND_DARLING_2);
     }
@@ -1338,7 +1343,7 @@ void func_8096426C(EnFu* this, PlayState* play) {
 // Called in Update
 void func_809642E0(EnFu* this, PlayState* play) {
     Collider_UpdateCylinder(&this->actor, &this->collider);
-    if (this->unk_542 == 0) {
+    if (this->gameIndex == 0) {
         CollisionCheck_SetAC(play, &play->colChkCtx, &this->collider.base);
     }
     CollisionCheck_SetOC(play, &play->colChkCtx, &this->collider.base);

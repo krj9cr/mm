@@ -41,12 +41,12 @@ typedef struct EnFu {
     /* 0x53C */ s16 unk_53C; // flag set to 0, 1, 2, changes to 1 when man looks at link, 2 for woman, 0 for neither
     /* 0x53E */ s16 unk_53E;
     /* 0x540 */ s16 unk_540;
-    /* 0x542 */ s16 unk_542; // mini game index? set to 0, 1, 2 depending on day
-    /* 0x544 */ s16 unk_544; // actorId, set to ACTOR_EN_FU_MATO or ACTOR_EN_FU_KAGO
-    /* 0x546 */ s16 unk_546; // if == 1, stuff happens, set to 1 for Target
+    /* 0x542 */ s16 gameIndex; // 2 for day 1 Target Arrows, 1 for day 2, 0 for day 3
+    /* 0x544 */ s16 gameTargetActorId; // set to ACTOR_EN_FU_MATO or ACTOR_EN_FU_KAGO
+    /* 0x546 */ s16 gameWasPlayedFlag; // set to 0 on scene init, then set to 1 once a game is played and stays 1; if == 1, stuff is changed for subsequent game plays?
     /* 0x548 */ s16 unk_548; // score?
     /* 0x54A */ s16 unk_54A; // initialized to 1, usually set to 0-3, related to processing talk request?
-    /* 0x54C */ s16 unk_54C; // max score? set to 16, incremented each time an actor is spawned
+    /* 0x54C */ s16 numTargets;
     /* 0x54E */ s16 spawnHeartTimer;
     /* 0x550 */ s16 unk_550;
     /* 0x552 */ u16 unk_552;
