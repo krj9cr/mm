@@ -2,6 +2,9 @@
  * File: z_en_fu.c
  * Overlay: ovl_En_Fu
  * Description: Honey & Darling
+ * 
+ * In addition to handling the normal NPC behavior with Honey & Darling, this actor is also responsible
+ * for running their respective mini games for each day as well.
  */
 
 #include "z_en_fu.h"
@@ -21,8 +24,8 @@ void EnFu_Destroy(Actor* thisx, PlayState* play);
 void EnFu_Update(Actor* thisx, PlayState* play);
 void EnFu_Draw(Actor* thisx, PlayState* play);
 
-void EnFu_Idle(EnFu* this);
-void EnFu_Talk(EnFu* this, PlayState* play);
+void EnFu_SetupIdle(EnFu* this);
+void EnFu_Idle(EnFu* this, PlayState* play);
 void func_809628BC(EnFu* this);
 void func_809628D0(EnFu* this, PlayState* play);
 void func_809629F8(EnFu* this);
@@ -219,7 +222,7 @@ void EnFu_Init(Actor* thisx, PlayState* play) {
         this->unk_540 = 0;
         this->spawnHeartTimer = 0;
         this->unk_550 = 0;
-        EnFu_Idle(this);
+        EnFu_SetupIdle(this);
         this->actor.targetMode = 6;
         EnFu_InitGame(this, play);
 
@@ -381,13 +384,13 @@ void func_8096209C(EnFu* this, PlayState* play) {
 }
 
 // func_809622FC
-void EnFu_Idle(EnFu* this) {
+void EnFu_SetupIdle(EnFu* this) {
     Actor_ChangeAnimationByInfo(&this->skelAnime, sAnimationInfo, 1);
-    this->actionFunc = EnFu_Talk;
+    this->actionFunc = EnFu_Idle;
 }
 
 // func_80962340
-void EnFu_Talk(EnFu* this, PlayState* play) {
+void EnFu_Idle(EnFu* this, PlayState* play) {
     Player* player = GET_PLAYER(play);
 
     if (this->unk_54A == 2) {
@@ -396,37 +399,39 @@ void EnFu_Talk(EnFu* this, PlayState* play) {
 
     if (Actor_ProcessTalkRequest(&this->actor, &play->state)) {
         if (this->unk_54A == 2) {
-            if (this->unk_552 == 0x287D) {
+            if (this->textId == 0x287D) { // Are you ready? Start the music!
                 if (gSaveContext.save.playerForm == PLAYER_FORM_DEKU) {
                     Message_StartTextbox(play, 0x287E, &this->actor);
-                    this->unk_552 = 0x287E;
+                    this->textId = 0x287E;
                 } else if ((CURRENT_DAY == 3) && (gSaveContext.save.weekEventReg[22] & 0x10) &&
                            (gSaveContext.save.weekEventReg[22] & 0x20)) {
                     if ((gSaveContext.save.weekEventReg[22] & 0x40)) {
                         Message_StartTextbox(play, 0x2883, &this->actor);
-                        this->unk_552 = 0x2883;
+                        this->textId = 0x2883;
                     } else {
                         Message_StartTextbox(play, 0x2880, &this->actor);
-                        this->unk_552 = 0x2880;
+                        this->textId = 0x2880;
                     }
                 } else {
                     Message_StartTextbox(play, 0x287E, &this->actor);
-                    this->unk_552 = 0x287E;
+                    this->textId = 0x287E;
                 }
             } else if ((gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] == SECONDS_TO_TIMER(0)) &&
-                       (this->unk_552 != 0x2888)) {
+                       (this->textId != 0x2888)) { // Oh, that's why I told you...
                 Message_StartTextbox(play, 0x2886, &this->actor);
-                this->unk_552 = 0x2886;
+                this->textId = 0x2886;
             } else {
+                // We've already won, Honey.
                 Message_StartTextbox(play, 0x2889, &this->actor);
-                this->unk_552 = 0x2889;
+                this->textId = 0x2889;
             }
             this->actor.flags &= ~ACTOR_FLAG_10000;
             player->stateFlags1 &= ~PLAYER_STATE1_20;
             this->unk_54A = 1;
         } else {
+            // It looks like we have a visitor, Honey.
             Message_StartTextbox(play, 0x283C, &this->actor);
-            this->unk_552 = 0x283C;
+            this->textId = 0x283C;
         }
         func_809628BC(this);
     } else if (this->unk_54A == 2) {
@@ -438,7 +443,8 @@ void EnFu_Talk(EnFu* this, PlayState* play) {
 }
 
 void func_80962588(EnFu* this, PlayState* play) {
-    if (Message_ShouldAdvance(play) && (this->unk_552 == 0x2871)) {
+    // One game is 10 Rupees. -- I'll play -- I won't play
+    if (Message_ShouldAdvance(play) && (this->textId == 0x2871)) {
         if (1) {}
         if (play->msgCtx.choiceIndex == 0) {
             if (gSaveContext.save.playerData.rupees >= 10) {
@@ -448,12 +454,13 @@ void func_80962588(EnFu* this, PlayState* play) {
             } else {
                 play_sound(NA_SE_SY_ERROR);
                 Message_StartTextbox(play, 0x2873, &this->actor);
-                this->unk_552 = 0x2873;
+                this->textId = 0x2873;
             }
         } else {
             func_8019F230();
+            // Honey, he says he isn't playing...
             Message_StartTextbox(play, 0x2872, &this->actor);
-            this->unk_552 = 0x2872;
+            this->textId = 0x2872;
         }
     }
 }
@@ -462,12 +469,12 @@ void func_80962660(EnFu* this, PlayState* play) {
     Player* player = GET_PLAYER(play);
 
     if (Message_ShouldAdvance(play)) {
-        switch (this->unk_552) {
-            case 0x283C:
+        switch (this->textId) {
+            case 0x283C: // It looks like we have a visitor, Honey.
                 func_80963F44(this, play);
                 break;
 
-            case 0x283D:
+            case 0x283D: // I wonder if it's a customer, Darling?
                 func_809639D0(this, play);
                 break;
 
@@ -475,13 +482,14 @@ void func_80962660(EnFu* this, PlayState* play) {
             case 0x283F:
             case 0x2841:
             case 0x2843:
-            case 0x2845:
+            case 0x2845: // What shall we do, Honey? I don't think this one can use a bow...
                 func_80963F44(this, play);
                 break;
 
-            case 0x2846:
+            case 0x2846: // But it looks like he can shoot bubbles, so let's let him play, Darling.
+                // Would you like to play? This time it's special...
                 Message_StartTextbox(play, 0x2849, &this->actor);
-                this->unk_552 = 0x2849;
+                this->textId = 0x2849;
                 break;
 
             case 0x2847:
@@ -531,19 +539,21 @@ void func_80962660(EnFu* this, PlayState* play) {
             case 0x286A:
             case 0x286C:
             case 0x286E:
+                 // One game is 10 Rupees. -- I'll play -- I won't play
                 Message_StartTextbox(play, 0x2871, &this->actor);
-                this->unk_552 = 0x2871;
+                this->textId = 0x2871;
                 break;
 
-            case 0x2876:
+            case 0x2876: // But if you fall from this platform, you're out. Isn't he, Darling?
             case 0x2878:
             case 0x287A:
             case 0x287C:
+                // Are you ready? Start the music!
                 Message_StartTextbox(play, 0x287D, &this->actor);
-                this->unk_552 = 0x287D;
+                this->textId = 0x287D;
                 break;
 
-            case 0x287D:
+            case 0x287D: // Are you ready? Start the music!
                 gSaveContext.save.weekEventReg[63] |= 1;
                 gSaveContext.save.weekEventReg[63] &= (u8)~2;
                 func_801477B4(play);
@@ -578,7 +588,7 @@ void func_80962660(EnFu* this, PlayState* play) {
                 break;
 
             case 0x2886:
-            case 0x2889:
+            case 0x2889: // We've already won, Honey.
                 func_80963F44(this, play);
                 break;
         }
@@ -610,20 +620,20 @@ void func_809628D0(EnFu* this, PlayState* play) {
         case TEXT_STATE_DONE:
             if (Message_ShouldAdvance(play)) {
                 this->unk_54A = 1;
-                switch (this->unk_552) {
+                switch (this->textId) {
                     case 0x287F:
                     case 0x2881:
                     case 0x2882:
                     case 0x2884:
                     case 0x2887:
-                    case 0x288A:
+                    case 0x288A: // I'm happy, Darling.
                         gSaveContext.save.weekEventReg[63] &= (u8)~1;
                         gSaveContext.save.weekEventReg[63] &= (u8)~2;
-                        EnFu_Idle(this);
+                        EnFu_SetupIdle(this);
                         break;
 
                     default:
-                        EnFu_Idle(this);
+                        EnFu_SetupIdle(this);
                         break;
                 }
             }
@@ -754,6 +764,7 @@ void func_80962F10(EnFu* this) {
     this->actionFunc = func_80962F4C;
 }
 
+// End game?
 void func_80962F4C(EnFu* this, PlayState* play) {
     Player* player = GET_PLAYER(play);
     BgFuKaiten* fuKaiten = (BgFuKaiten*)this->actor.child;
@@ -794,13 +805,15 @@ void func_80962F4C(EnFu* this, PlayState* play) {
         player->stateFlags3 &= ~PLAYER_STATE3_400000;
         func_80961E88(play);
         player->stateFlags1 |= PLAYER_STATE1_20;
+
         if (this->unk_548 < this->numTargets) {
             if (gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] == SECONDS_TO_TIMER(0)) {
                 Message_StartTextbox(play, 0x2885, &this->actor);
-                this->unk_552 = 0x2885;
+                this->textId = 0x2885;
             } else {
+                // Oh, that's why I told you...
                 Message_StartTextbox(play, 0x2888, &this->actor);
-                this->unk_552 = 0x2888;
+                this->textId = 0x2888;
             }
             func_801A2C20();
             gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] = SECONDS_TO_TIMER(0);
@@ -828,7 +841,7 @@ void func_80963258(EnFu* this) {
 void func_8096326C(EnFu* this, PlayState* play) {
     func_80963FF8(this, play);
     if (func_80963810(play, this->actor.world.pos)) {
-        EnFu_Idle(this);
+        EnFu_SetupIdle(this);
     }
 }
 
@@ -891,7 +904,7 @@ void func_80963560(EnFu* this, PlayState* play) {
     if (Actor_HasParent(&this->actor, play)) {
         this->actor.parent = NULL;
         func_80963610(this);
-    } else if ((this->unk_552 == 0x2880) && !(gSaveContext.save.weekEventReg[22] & 0x80)) {
+    } else if ((this->textId == 0x2880) && !(gSaveContext.save.weekEventReg[22] & 0x80)) {
         Actor_PickUp(&this->actor, play, GI_HEART_PIECE, 500.0f, 100.0f);
     } else {
         Actor_PickUp(&this->actor, play, GI_RUPEE_PURPLE, 500.0f, 100.0f);
@@ -912,18 +925,18 @@ void func_80963630(EnFu* this, PlayState* play) {
             (CURRENT_DAY == 3) && (gSaveContext.save.playerForm == PLAYER_FORM_HUMAN)) {
             if (gSaveContext.save.weekEventReg[22] & 0x40) {
                 Message_StartTextbox(play, 0x2884, &this->actor);
-                this->unk_552 = 0x2884;
+                this->textId = 0x2884;
             } else if (!(gSaveContext.save.weekEventReg[22] & 0x80)) {
                 gSaveContext.save.weekEventReg[22] |= 0x80;
                 Message_StartTextbox(play, 0x2882, &this->actor);
-                this->unk_552 = 0x2882;
+                this->textId = 0x2882;
             } else {
                 Message_StartTextbox(play, 0x2881, &this->actor);
-                this->unk_552 = 0x2881;
+                this->textId = 0x2881;
             }
         } else {
             Message_StartTextbox(play, 0x287F, &this->actor);
-            this->unk_552 = 0x287F;
+            this->textId = 0x287F;
         }
 
         this->actor.flags &= ~ACTOR_FLAG_10000;
@@ -978,6 +991,7 @@ s32 func_80963810(PlayState* play, Vec3f pos) {
     return false;
 }
 
+// Similar code lives in powder keg and bomb flower..?
 s32 func_809638F8(PlayState* play) {
     s32 ret = true;
 
@@ -1031,50 +1045,50 @@ void func_809639D0(EnFu* this, PlayState* play) {
             if (gSaveContext.save.playerForm == PLAYER_FORM_HUMAN) {
                 if (CUR_UPG_VALUE(UPG_BOMB_BAG) == 0) {
                     Message_StartTextbox(play, 0x2853, &this->actor);
-                    this->unk_552 = 0x2853;
+                    this->textId = 0x2853;
                 } else if (gSaveContext.save.weekEventReg[22] & 0x10) {
                     Message_StartTextbox(play, 0x284D, &this->actor);
-                    this->unk_552 = 0x284D;
+                    this->textId = 0x284D;
                 } else if (this->unk_53E == 1) {
                     Message_StartTextbox(play, 0x284F, &this->actor);
-                    this->unk_552 = 0x284F;
+                    this->textId = 0x284F;
                 } else {
                     this->unk_53E = 1;
                     Message_StartTextbox(play, 0x2851, &this->actor);
-                    this->unk_552 = 0x2851;
+                    this->textId = 0x2851;
                 }
             } else {
                 Message_StartTextbox(play, 0x286F, &this->actor);
-                this->unk_552 = 0x286F;
+                this->textId = 0x286F;
             }
             break;
 
         case 2:
             if (gSaveContext.save.playerForm != PLAYER_FORM_HUMAN) {
                 Message_StartTextbox(play, 0x286F, &this->actor);
-                this->unk_552 = 0x286F;
+                this->textId = 0x286F;
             } else if (CUR_UPG_VALUE(UPG_BOMB_BAG) == 0) {
                 Message_StartTextbox(play, 0x2853, &this->actor);
-                this->unk_552 = 0x2853;
+                this->textId = 0x2853;
             } else if (!(gSaveContext.save.weekEventReg[22] & 0x10)) {
                 if (this->unk_53E == 1) {
                     Message_StartTextbox(play, 0x285B, &this->actor);
-                    this->unk_552 = 0x285B;
+                    this->textId = 0x285B;
                 } else {
                     this->unk_53E = 1;
                     Message_StartTextbox(play, 0x285D, &this->actor);
-                    this->unk_552 = 0x285D;
+                    this->textId = 0x285D;
                 }
             } else if (gSaveContext.save.weekEventReg[22] & 0x20) {
                 Message_StartTextbox(play, 0x2855, &this->actor);
-                this->unk_552 = 0x2855;
+                this->textId = 0x2855;
             } else if (this->unk_53E == 1) {
                 Message_StartTextbox(play, 0x2857, &this->actor);
-                this->unk_552 = 0x2857;
+                this->textId = 0x2857;
             } else {
                 this->unk_53E = 1;
                 Message_StartTextbox(play, 0x2859, &this->actor);
-                this->unk_552 = 0x2859;
+                this->textId = 0x2859;
             }
             break;
 
@@ -1084,44 +1098,44 @@ void func_809639D0(EnFu* this, PlayState* play) {
                     func_80963EAC(this, play);
                 } else {
                     Message_StartTextbox(play, 0x2841, &this->actor);
-                    this->unk_552 = 0x2841;
+                    this->textId = 0x2841;
                 }
             } else if (CUR_UPG_VALUE(UPG_QUIVER) == 0) {
                 Message_StartTextbox(play, 0x284B, &this->actor);
-                this->unk_552 = 0x284B;
+                this->textId = 0x284B;
             } else if (gSaveContext.save.weekEventReg[22] & 0x40) {
                 if ((gSaveContext.save.weekEventReg[22] & 0x10) && (gSaveContext.save.weekEventReg[22] & 0x20)) {
                     Message_StartTextbox(play, 0x285F, &this->actor);
-                    this->unk_552 = 0x285F;
+                    this->textId = 0x285F;
                 } else {
                     Message_StartTextbox(play, 0x2861, &this->actor);
-                    this->unk_552 = 0x2861;
+                    this->textId = 0x2861;
                 }
             } else if ((gSaveContext.save.weekEventReg[22] & 0x10) && (gSaveContext.save.weekEventReg[22] & 0x20)) {
                 if (this->unk_53E == 1) {
                     Message_StartTextbox(play, 0x2863, &this->actor);
-                    this->unk_552 = 0x2863;
+                    this->textId = 0x2863;
                 } else {
                     this->unk_53E = 1;
                     Message_StartTextbox(play, 0x2865, &this->actor);
-                    this->unk_552 = 0x2865;
+                    this->textId = 0x2865;
                 }
             } else if ((gSaveContext.save.weekEventReg[22] & 0x10) || (gSaveContext.save.weekEventReg[22] & 0x20)) {
                 if (this->unk_53E == 1) {
                     Message_StartTextbox(play, 0x2867, &this->actor);
-                    this->unk_552 = 0x2867;
+                    this->textId = 0x2867;
                 } else {
                     this->unk_53E = 1;
                     Message_StartTextbox(play, 0x2869, &this->actor);
-                    this->unk_552 = 0x2869;
+                    this->textId = 0x2869;
                 }
             } else if (this->unk_53E == 1) {
                 Message_StartTextbox(play, 0x286B, &this->actor);
-                this->unk_552 = 0x286B;
+                this->textId = 0x286B;
             } else {
                 this->unk_53E = 1;
                 Message_StartTextbox(play, 0x286D, &this->actor);
-                this->unk_552 = 0x286D;
+                this->textId = 0x286D;
             }
             break;
     }
@@ -1131,47 +1145,51 @@ void func_80963DE4(EnFu* this, PlayState* play) {
     switch (this->gameIndex) {
         case 0:
             if (gSaveContext.save.playerForm != PLAYER_FORM_HUMAN) {
+                // Hit all the targets in the time it takes for us to dance through one song.
                 Message_StartTextbox(play, 0x2875, &this->actor);
-                this->unk_552 = 0x2875;
+                this->textId = 0x2875;
             } else {
                 Message_StartTextbox(play, 0x2877, &this->actor);
-                this->unk_552 = 0x2877;
+                this->textId = 0x2877;
             }
             break;
 
         case 1:
             Message_StartTextbox(play, 0x2879, &this->actor);
-            this->unk_552 = 0x2879;
+            this->textId = 0x2879;
             break;
 
         case 2:
             Message_StartTextbox(play, 0x287B, &this->actor);
-            this->unk_552 = 0x287B;
+            this->textId = 0x287B;
             break;
     }
 }
 
+// CheckMagic
 void func_80963EAC(EnFu* this, PlayState* play) {
     if (gSaveContext.save.playerData.isMagicAcquired) {
         if (this->unk_540 == 1) {
+            // Oh, will the little Deku Scrub play again?
             Message_StartTextbox(play, 0x2847, &this->actor);
-            this->unk_552 = 0x2847;
+            this->textId = 0x2847;
         } else {
             this->unk_540 = 1;
+            // What shall we do, Honey? I don't think this one can use a bow...
             Message_StartTextbox(play, 0x2845, &this->actor);
-            this->unk_552 = 0x2845;
+            this->textId = 0x2845;
         }
     } else {
         Message_StartTextbox(play, 0x2843, &this->actor);
-        this->unk_552 = 0x2843;
+        this->textId = 0x2843;
     }
 }
 
 void func_80963F44(EnFu* this, PlayState* play) {
-    u16 sp1E = this->unk_552 + 1;
+    u16 sp1E = this->textId + 1;
 
     Message_StartTextbox(play, sp1E, &this->actor);
-    this->unk_552 = sp1E;
+    this->textId = sp1E;
 }
 
 void func_80963F88(EnFu* this, PlayState* play) {
@@ -1196,7 +1214,7 @@ void func_80963FF8(EnFu* this, PlayState* play) {
     }
 }
 
-void EnFu_IdleHearts(EnFu* this, PlayState* play) {
+void EnFu_SetupIdleHearts(EnFu* this, PlayState* play) {
     Vec3f heartStartPos;
 
     if (DECR(this->spawnHeartTimer) == 0) {
@@ -1225,10 +1243,10 @@ void func_8096413C(EnFu* this, PlayState* play) {
 
 void func_80964190(EnFu* this, PlayState* play) {
     if (Message_ShouldAdvance(play)) {
-        switch (this->unk_552) {
+        switch (this->textId) {
             case 0x2842:
             case 0x2844:
-            case 0x2848:
+            case 0x2848: // Target shooting runs until tonight, so why don't we let him play, Darling?
                 Actor_ChangeAnimationByInfo(&this->skelAnime, sAnimationInfo, 1);
                 break;
 
@@ -1254,7 +1272,7 @@ void func_80964190(EnFu* this, PlayState* play) {
             case 0x2869:
             case 0x286B:
             case 0x286D:
-            case 0x2871:
+            case 0x2871: // One game is 10 Rupees. -- I'll play -- I won't play
                 Actor_ChangeAnimationByInfo(&this->skelAnime, sAnimationInfo, 4);
                 break;
 
@@ -1277,7 +1295,7 @@ void func_80964190(EnFu* this, PlayState* play) {
 
 void func_8096426C(EnFu* this, PlayState* play) {
     if (Message_ShouldAdvance(play)) {
-        switch (this->unk_552) {
+        switch (this->textId) {
             case 0x2840:
             case 0x2841:
             case 0x2843:
@@ -1304,7 +1322,7 @@ void func_8096426C(EnFu* this, PlayState* play) {
             case 0x2877:
             case 0x2879:
             case 0x287B:
-            case 0x287D:
+            case 0x287D:  // Are you ready? Start the music!
                 this->unk_53C = 1;
                 break;
 
@@ -1357,7 +1375,7 @@ void EnFu_Update(Actor* thisx, PlayState* play) {
     SkelAnime_Update(&this->skelAnime);
     func_80961D7C(play);
     func_809640D8(this, play);
-    EnFu_IdleHearts(this, play);
+    EnFu_SetupIdleHearts(this, play);
 }
 
 s32 EnFu_OverrideLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3f* pos, Vec3s* rot, Actor* thisx) {

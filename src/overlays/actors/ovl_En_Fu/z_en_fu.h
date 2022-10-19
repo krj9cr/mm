@@ -49,7 +49,7 @@ typedef struct EnFu {
     /* 0x54C */ s16 numTargets;
     /* 0x54E */ s16 spawnHeartTimer;
     /* 0x550 */ s16 unk_550;
-    /* 0x552 */ u16 unk_552;
+    /* 0x552 */ u16 textId;
 } EnFu; // size = 0x554
 
 extern const ActorInit En_Fu_InitVars;
