@@ -21,8 +21,8 @@ void EnFu_Destroy(Actor* thisx, PlayState* play);
 void EnFu_Update(Actor* thisx, PlayState* play);
 void EnFu_Draw(Actor* thisx, PlayState* play);
 
-void func_809622FC(EnFu* this);
-void func_80962340(EnFu* this, PlayState* play);
+void EnFu_Idle(EnFu* this);
+void EnFu_Talk(EnFu* this, PlayState* play);
 void func_809628BC(EnFu* this);
 void func_809628D0(EnFu* this, PlayState* play);
 void func_809629F8(EnFu* this);
@@ -219,7 +219,7 @@ void EnFu_Init(Actor* thisx, PlayState* play) {
         this->unk_540 = 0;
         this->spawnHeartTimer = 0;
         this->unk_550 = 0;
-        func_809622FC(this);
+        EnFu_Idle(this);
         this->actor.targetMode = 6;
         EnFu_InitGame(this, play);
 
@@ -380,17 +380,14 @@ void func_8096209C(EnFu* this, PlayState* play) {
     this->actor.focus.pos.z += this->actor.world.pos.z;
 }
 
-// Called in Init and a couple other places
-// PROGRESS
-// EnFu_SetupIdle? - maybe they go back to this after a minigame?
-void func_809622FC(EnFu* this) {
+// func_809622FC
+void EnFu_Idle(EnFu* this) {
     Actor_ChangeAnimationByInfo(&this->skelAnime, sAnimationInfo, 1);
-    this->actionFunc = func_80962340;
+    this->actionFunc = EnFu_Talk;
 }
 
-// assigned to this->actionFunc
-// EnFu_Talk
-void func_80962340(EnFu* this, PlayState* play) {
+// func_80962340
+void EnFu_Talk(EnFu* this, PlayState* play) {
     Player* player = GET_PLAYER(play);
 
     if (this->unk_54A == 2) {
@@ -622,11 +619,11 @@ void func_809628D0(EnFu* this, PlayState* play) {
                     case 0x288A:
                         gSaveContext.save.weekEventReg[63] &= (u8)~1;
                         gSaveContext.save.weekEventReg[63] &= (u8)~2;
-                        func_809622FC(this);
+                        EnFu_Idle(this);
                         break;
 
                     default:
-                        func_809622FC(this);
+                        EnFu_Idle(this);
                         break;
                 }
             }
@@ -831,7 +828,7 @@ void func_80963258(EnFu* this) {
 void func_8096326C(EnFu* this, PlayState* play) {
     func_80963FF8(this, play);
     if (func_80963810(play, this->actor.world.pos)) {
-        func_809622FC(this);
+        EnFu_Idle(this);
     }
 }
 
