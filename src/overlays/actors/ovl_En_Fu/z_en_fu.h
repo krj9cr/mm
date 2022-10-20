@@ -45,7 +45,7 @@ typedef struct EnFu {
     /* 0x544 */ s16 gameTargetActorId; // set to ACTOR_EN_FU_MATO or ACTOR_EN_FU_KAGO
     /* 0x546 */ s16 gameWasPlayedFlag; // set to 0 on scene init, then set to 1 once a game is played and stays 1; if == 1, stuff is changed for subsequent game plays?
     /* 0x548 */ s16 unk_548; // score?
-    /* 0x54A */ s16 unk_54A; // initialized to 1, usually set to 0-3, related to processing talk request?
+    /* 0x54A */ s16 unk_54A; // 0x8040FC2A initialized to 1, usually set to 0-3, related to processing talk request?
     /* 0x54C */ s16 numTargets;
     /* 0x54E */ s16 spawnHeartTimer;
     /* 0x550 */ s16 unk_550;

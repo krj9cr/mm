@@ -401,6 +401,7 @@ void EnFu_Idle(EnFu* this, PlayState* play) {
         if (this->unk_54A == 2) {
             if (this->textId == 0x287D) { // Are you ready? Start the music!
                 if (gSaveContext.save.playerForm == PLAYER_FORM_DEKU) {
+                    // ...he got a perfect score...
                     Message_StartTextbox(play, 0x287E, &this->actor);
                     this->textId = 0x287E;
                 } else if ((CURRENT_DAY == 3) && (gSaveContext.save.weekEventReg[22] & 0x10) &&
@@ -413,11 +414,13 @@ void EnFu_Idle(EnFu* this, PlayState* play) {
                         this->textId = 0x2880;
                     }
                 } else {
+                    // ...he got a perfect score...
                     Message_StartTextbox(play, 0x287E, &this->actor);
                     this->textId = 0x287E;
                 }
             } else if ((gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] == SECONDS_TO_TIMER(0)) &&
                        (this->textId != 0x2888)) { // Oh, that's why I told you...
+                // It's already over, Honey.
                 Message_StartTextbox(play, 0x2886, &this->actor);
                 this->textId = 0x2886;
             } else {
@@ -544,8 +547,8 @@ void func_80962660(EnFu* this, PlayState* play) {
                 this->textId = 0x2871;
                 break;
 
-            case 0x2876: // But if you fall from this platform, you're out. Isn't he, Darling?
-            case 0x2878:
+            case 0x2876:
+            case 0x2878:  // But if you fall from this platform, you're out. Isn't he, Darling?
             case 0x287A:
             case 0x287C:
                 // Are you ready? Start the music!
@@ -625,7 +628,7 @@ void func_809628D0(EnFu* this, PlayState* play) {
                     case 0x2881:
                     case 0x2882:
                     case 0x2884:
-                    case 0x2887:
+                    case 0x2887: // For awhile, it was like a dream, Darling.
                     case 0x288A: // I'm happy, Darling.
                         gSaveContext.save.weekEventReg[63] &= (u8)~1;
                         gSaveContext.save.weekEventReg[63] &= (u8)~2;
@@ -808,6 +811,7 @@ void func_80962F4C(EnFu* this, PlayState* play) {
 
         if (this->unk_548 < this->numTargets) {
             if (gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] == SECONDS_TO_TIMER(0)) {
+                // All done.
                 Message_StartTextbox(play, 0x2885, &this->actor);
                 this->textId = 0x2885;
             } else {
@@ -917,6 +921,7 @@ void func_80963610(EnFu* this) {
     this->actionFunc = func_80963630;
 }
 
+// Won game?
 void func_80963630(EnFu* this, PlayState* play) {
     Player* player = GET_PLAYER(play);
 
@@ -935,6 +940,7 @@ void func_80963630(EnFu* this, PlayState* play) {
                 this->textId = 0x2881;
             }
         } else {
+            // That's annoying, so let's show off even more...
             Message_StartTextbox(play, 0x287F, &this->actor);
             this->textId = 0x287F;
         }
@@ -1054,10 +1060,12 @@ void func_809639D0(EnFu* this, PlayState* play) {
                     this->textId = 0x284F;
                 } else {
                     this->unk_53E = 1;
+                    // Oh, would you like to play?
                     Message_StartTextbox(play, 0x2851, &this->actor);
                     this->textId = 0x2851;
                 }
             } else {
+                // ... he doesn't seem able to carry bombs.
                 Message_StartTextbox(play, 0x286F, &this->actor);
                 this->textId = 0x286F;
             }
@@ -1065,6 +1073,7 @@ void func_809639D0(EnFu* this, PlayState* play) {
 
         case 2:
             if (gSaveContext.save.playerForm != PLAYER_FORM_HUMAN) {
+                // ... he doesn't seem able to carry bombs.
                 Message_StartTextbox(play, 0x286F, &this->actor);
                 this->textId = 0x286F;
             } else if (CUR_UPG_VALUE(UPG_BOMB_BAG) == 0) {
